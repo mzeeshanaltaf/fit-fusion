@@ -1,0 +1,566 @@
+Fitness Plan:
+Fitness plan pipeline which does the following:
+
+* Generates workout plan based on user profile (age, weight_kg, gender, height_cm), fitness goal and training level
+* Generates nutrition plan based on user profile (age, weight_kg, gender, height_cm) and fitness goals
+
+Fintess Goal can have following values:
+    'fat_loss',
+    'muscle_gain',
+    'maintenance',
+    'strength',
+    'endurance'
+Training Level can have following values:
+    'beginner',
+    'intermediate',
+    'advanced'
+
+Request:
+curl --location 'https://n8n.zeeshanai.cloud/webhook/a834eeb9-37b5-41a6-88af-1b2719c426c0' \
+--data '{
+    "event_type": "fitness-plan",
+    "user_id": "user_id",
+    "age": 45,
+    "weight_kg": 80,
+    "gender": "male",
+    "height_cm": 180,
+    "fitness_goal": "fat_loss",
+    "training_level": "intermediate"
+    
+}'
+
+Header Authorization:
+key: x-api-key
+value: <FitFusion API Key>
+
+Sample Response:
+{
+  "success": true,
+  "status": "FITNESS_PLAN_GENERATED",
+  "message": "Fitness plan generated successfully"
+}  
+
+-----------------------------------------------------
+Get User Analytics:
+* Returns the following for a given user:
+    - total number of fitness plans
+
+Request:
+curl --location 'https://n8n.zeeshanai.cloud/webhook/f201856a-aafe-459c-af67-e6dc5be6800c' \
+--data '{
+    "event_type": "user_analytics",
+    "user_id": "user_id"
+}'
+
+Header Authorization:
+key: x-api-key
+value: <FitFusion API Key>
+
+Sample Response:
+[
+  {
+    "total_fitness_plan": "5"
+  }
+]
+-----------------------------------------------------
+**Signup Credits**
+Assign 5 credits to user account during sign-up. 1 credit equates to processing of one fitness plan generation.
+
+Request:
+curl --location 'https://n8n.zeeshanai.cloud/webhook/c02c7fce-1297-4e45-8baa-9f9c20c29329' \
+--data '{
+    "event_type": "signup_credits",
+    "user_id": "b0f97a7f-e8a1-db7a-14ff-64752da7e5c3"
+}'
+
+Header Authorization:
+key: x-api-key
+value: <FitFusion API Key>
+
+Response:
+{
+  "success": true,
+  "status": "CREDITS_ASSIGNED",
+  "message": "Signup credits have been successfully added to your account"
+} 
+-----------------------------------------------------
+**Get Remaining Credit**
+Get the remaining credits available to the user.
+
+Header Authorization:
+key: x-api-key
+value: <FitFusion API Key>
+
+Request:
+curl --location 'https://n8n.zeeshanai.cloud/webhook/c02c7fce-1297-4e45-8baa-9f9c20c29329' \
+--data '{
+    "event_type": "get_remaining_credit",
+    "user_id": "b0f97a7f-e8a1-db7a-14ff-64752da7e5c3"
+}'
+
+Response:
+
+[
+  {
+    "current_balance": 1
+  }
+]
+-----------------------------------------------------
+
+**Get Credit History**
+Get the credits history of the user.
+
+Header Authorization:
+key: x-api-key
+value: <FitFusion API Key>
+
+Request:
+curl --location 'https://n8n.zeeshanai.cloud/webhook/c02c7fce-1297-4e45-8baa-9f9c20c29329' \
+--data '{
+    "event_type": "credit_history",
+    "user_id": "b0f97a7f-e8a1-db7a-14ff-64752da7e5c3"
+}'
+
+Response:
+[
+  {
+    "transaction_id": "c8f2c67c-3784-4ef6-a30a-4b88960b13dc",
+    "user_id": "b0f97a7f-e8a1-db7a-14ff-64752da7e5c3",
+    "transaction_type": "signup_bonus",
+    "credits_delta": 5,
+    "reference_id": null,
+    "name_snapshot": null,
+    "description": "Free credits on signup",
+    "created_at": "2026-02-25T16:28:29.252Z"
+  }
+]
+-----------------------------------------------------
+
+**Get Fitness Plan**
+* Returns the following for a given user:
+    - User Profile (age, weight, height, gender)
+    - Fitness Goal
+    - Training Level
+    - Workout Plan
+    - Nutrition Plan
+
+Header Authorization:
+key: x-api-key
+value: <FitFusion API Key>
+
+Request:
+curl --location 'https://n8n.zeeshanai.cloud/webhook/6fcfe67a-52c3-4ee3-a950-88a8bf5a3db0' \
+--data '{
+    "event_type": "get_fitness_plan",
+    "user_id": "b0f97a7f-e8a1-db7a-14ff-64752da7e5c3"
+}'
+
+Response:
+[
+  {
+    "id": "309e2056-94f0-4afd-8c99-d62556d23fa4",
+    "user_id": "b0f97a7f-e8a1-db7a-14ff-64752da7e5c3",
+    "age": 45,
+    "weight_kg": "80.00",
+    "height_cm": "180.00",
+    "gender": "male",
+    "fitness_goal": "fat_loss",
+    "training_level": "intermediate",
+    "workout_plan": {
+      "data": [
+        {
+          "workout_id": "b845971d-73b3-42b2-a5f4-c07e97b3fec7",
+          "fitness_goal": "fat_loss",
+          "workout_name": "Full Body Compound Lift",
+          "training_level": "intermediate",
+          "workout_detail": {
+            "exercises": [
+              {
+                "reps": "6-10",
+                "sets": 3,
+                "rest_seconds": 90,
+                "exercise_name": "Deadlifts",
+                "exercise_slug": "deadlifts"
+              },
+              {
+                "reps": "10-15",
+                "sets": 3,
+                "rest_seconds": 60,
+                "exercise_name": "Goblet Squats",
+                "exercise_slug": "goblet-squats"
+              },
+              {
+                "reps": "8-12",
+                "sets": 3,
+                "rest_seconds": 60,
+                "exercise_name": "Push Press",
+                "exercise_slug": "push-press"
+              },
+              {
+                "reps": "15-20",
+                "sets": 3,
+                "rest_seconds": 45,
+                "exercise_name": "Kettlebell Swings",
+                "exercise_slug": "kettlebell-swings"
+              },
+              {
+                "reps": "45-60 seconds",
+                "sets": 3,
+                "rest_seconds": 45,
+                "exercise_name": "Farmer's Carry",
+                "exercise_slug": "farmer's-carry"
+              }
+            ],
+            "duration_minutes": 55,
+            "equipment_needed": [
+              "barbell",
+              "dumbbells",
+              "kettlebell"
+            ]
+          },
+          "workout_category": "strength"
+        },
+        {
+          "workout_id": "ede72905-35e1-4505-98de-be2018a8e659",
+          "fitness_goal": "fat_loss",
+          "workout_name": "Full Body Strength Builder",
+          "training_level": "intermediate",
+          "workout_detail": {
+            "exercises": [
+              {
+                "reps": "8-12",
+                "sets": 3,
+                "rest_seconds": 60,
+                "exercise_name": "Squats",
+                "exercise_slug": "squats"
+              },
+              {
+                "reps": "8-12",
+                "sets": 3,
+                "rest_seconds": 60,
+                "exercise_name": "Bench Press",
+                "exercise_slug": "bench-press"
+              },
+              {
+                "reps": "8-12",
+                "sets": 3,
+                "rest_seconds": 60,
+                "exercise_name": "Bent-Over Rows",
+                "exercise_slug": "bent-over-rows"
+              },
+              {
+                "reps": "10-15",
+                "sets": 3,
+                "rest_seconds": 45,
+                "exercise_name": "Overhead Press",
+                "exercise_slug": "overhead-press"
+              },
+              {
+                "reps": "45-60 seconds",
+                "sets": 3,
+                "rest_seconds": 30,
+                "exercise_name": "Plank",
+                "exercise_slug": "plank"
+              }
+            ],
+            "duration_minutes": 45,
+            "equipment_needed": [
+              "dumbbells",
+              "barbell",
+              "bench"
+            ]
+          },
+          "workout_category": "strength"
+        },
+        {
+          "workout_id": "245b18fb-bbb3-4da1-8312-f9cc98f13f2e",
+          "fitness_goal": "fat_loss",
+          "workout_name": "Metabolic Mayhem Circuit",
+          "training_level": "intermediate",
+          "workout_detail": {
+            "exercises": [
+              {
+                "reps": "45 seconds",
+                "sets": 3,
+                "rest_seconds": 15,
+                "exercise_name": "Kettlebell Goblet Squat",
+                "exercise_slug": "kettlebell-goblet-squat"
+              },
+              {
+                "reps": "45 seconds",
+                "sets": 3,
+                "rest_seconds": 15,
+                "exercise_name": "Push-up to Renegade Row",
+                "exercise_slug": "push-up-to-renegade-row"
+              },
+              {
+                "reps": "45 seconds",
+                "sets": 3,
+                "rest_seconds": 15,
+                "exercise_name": "Alternating Dumbbell Snatch",
+                "exercise_slug": "alternating-dumbbell-snatch"
+              },
+              {
+                "reps": "45 seconds",
+                "sets": 3,
+                "rest_seconds": 15,
+                "exercise_name": "Walking Lunge with Press",
+                "exercise_slug": "walking-lunge-with-press"
+              },
+              {
+                "reps": "45 seconds",
+                "sets": 3,
+                "rest_seconds": 15,
+                "exercise_name": "Burpee Broad Jump",
+                "exercise_slug": "burpee-broad-jump"
+              }
+            ],
+            "duration_minutes": 35,
+            "equipment_needed": [
+              "dumbbells",
+              "kettlebell"
+            ]
+          },
+          "workout_category": "hiit"
+        },
+        {
+          "workout_id": "a34aec93-2896-4ba3-b6a6-8595bac3c6ac",
+          "fitness_goal": "fat_loss",
+          "workout_name": "Interval Running Challenge",
+          "training_level": "intermediate",
+          "workout_detail": {
+            "exercises": [
+              {
+                "reps": "35 minutes",
+                "sets": 1,
+                "rest_seconds": 0,
+                "exercise_name": "Treadmill Intervals",
+                "exercise_slug": "treadmill-intervals"
+              }
+            ],
+            "duration_minutes": 35,
+            "equipment_needed": [
+              "treadmill"
+            ]
+          },
+          "workout_category": "cardio"
+        },
+        {
+          "workout_id": "5ce2944f-818b-4b73-a6d0-0647cf91cf27",
+          "fitness_goal": "fat_loss",
+          "workout_name": "Dynamic Mobility Flow",
+          "training_level": "intermediate",
+          "workout_detail": {
+            "exercises": [
+              {
+                "reps": "10-12",
+                "sets": 3,
+                "rest_seconds": 15,
+                "exercise_name": "Cat-Cow",
+                "exercise_slug": "cat-cow"
+              },
+              {
+                "reps": "10-12 reps per side",
+                "sets": 3,
+                "rest_seconds": 15,
+                "exercise_name": "Thoracic Rotations",
+                "exercise_slug": "thoracic-rotations"
+              },
+              {
+                "reps": "10-12 reps per leg",
+                "sets": 3,
+                "rest_seconds": 15,
+                "exercise_name": "Hip Circles",
+                "exercise_slug": "hip-circles"
+              },
+              {
+                "reps": "10-12 reps per leg",
+                "sets": 3,
+                "rest_seconds": 15,
+                "exercise_name": "Leg Swings",
+                "exercise_slug": "leg-swings"
+              },
+              {
+                "reps": "10-12 reps forward/back",
+                "sets": 3,
+                "rest_seconds": 15,
+                "exercise_name": "Arm Circles",
+                "exercise_slug": "arm-circles"
+              }
+            ],
+            "duration_minutes": 25,
+            "equipment_needed": [
+              "bodyweight"
+            ]
+          },
+          "workout_category": "mobility"
+        }
+      ]
+    },
+    "nutrition_plan": {
+      "day_1": {
+        "lunch": {
+          "meal": "Grilled chicken breast (150g) salad: mixed greens (100g), cherry tomatoes (80g), cucumber, 50g quinoa, 1 tbsp olive oil & lemon",
+          "fat_g": 20,
+          "carbs_g": 35,
+          "calories": 520,
+          "protein_g": 48
+        },
+        "dinner": {
+          "meal": "Baked salmon (140g) with steamed broccoli (150g) and 200g roasted sweet potato",
+          "fat_g": 22,
+          "carbs_g": 50,
+          "calories": 560,
+          "protein_g": 38
+        },
+        "snacks": [
+          {
+            "meal": "Apple (medium) + 20g almond butter",
+            "fat_g": 11,
+            "carbs_g": 28,
+            "calories": 220,
+            "protein_g": 5
+          }
+        ],
+        "breakfast": {
+          "meal": "Greek yogurt (200g) with 40g oats, 1 small banana (100g), 10g chopped walnuts",
+          "fat_g": 14,
+          "carbs_g": 52,
+          "calories": 450,
+          "protein_g": 28
+        }
+      },
+      "day_2": {
+        "lunch": {
+          "meal": "Turkey and avocado wrap: wholegrain tortilla, turkey breast (120g), 1/4 avocado, lettuce, tomato, mustard. Side carrot sticks (100g)",
+          "fat_g": 18,
+          "carbs_g": 45,
+          "calories": 510,
+          "protein_g": 40
+        },
+        "dinner": {
+          "meal": "Stir-fry tofu (150g) with mixed vegetables (200g) and 125g cooked brown rice, light soy sauce",
+          "fat_g": 16,
+          "carbs_g": 68,
+          "calories": 560,
+          "protein_g": 32
+        },
+        "snacks": [
+          {
+            "meal": "Low-fat cottage cheese (150g) with cucumber slices",
+            "fat_g": 6,
+            "carbs_g": 6,
+            "calories": 180,
+            "protein_g": 24
+          }
+        ],
+        "breakfast": {
+          "meal": "2 scrambled eggs + 3 egg whites, wholegrain toast (1 slice), 100g mixed berries",
+          "fat_g": 12,
+          "carbs_g": 30,
+          "calories": 360,
+          "protein_g": 30
+        }
+      },
+      "day_3": {
+        "lunch": {
+          "meal": "Tuna (canned in water, 150g drained) on a bed of mixed greens with 100g cooked chickpeas, olive oil (1 tsp) & vinegar",
+          "fat_g": 14,
+          "carbs_g": 40,
+          "calories": 520,
+          "protein_g": 48
+        },
+        "dinner": {
+          "meal": "Lean beef (120g) steak, zucchini & bell pepper medley (200g), 150g baked potato",
+          "fat_g": 20,
+          "carbs_g": 56,
+          "calories": 580,
+          "protein_g": 42
+        },
+        "snacks": [
+          {
+            "meal": "Handful (25g) mixed nuts",
+            "fat_g": 17,
+            "carbs_g": 8,
+            "calories": 200,
+            "protein_g": 6
+          }
+        ],
+        "breakfast": {
+          "meal": "Protein smoothie: 1 scoop whey (25g protein), 250ml skim milk, 1 small banana, 15g peanut butter, spinach",
+          "fat_g": 12,
+          "carbs_g": 38,
+          "calories": 420,
+          "protein_g": "thirty"
+        }
+      },
+      "day_4": {
+        "lunch": {
+          "meal": "Grilled shrimp (150g) bowl with 100g cooked bulgur, mixed greens, cherry tomatoes, 1 tbsp olive oil",
+          "fat_g": 15,
+          "carbs_g": 45,
+          "calories": 520,
+          "protein_g": 42
+        },
+        "dinner": {
+          "meal": "Chicken stir-fry: chicken thigh (skinless, 140g) with broccoli, snap peas, 125g cooked soba noodles, light sauce",
+          "fat_g": 18,
+          "carbs_g": 64,
+          "calories": 600,
+          "protein_g": 44
+        },
+        "snacks": [
+          {
+            "meal": "Greek yogurt (100g) + 1 small orange",
+            "fat_g": 4,
+            "carbs_g": 26,
+            "calories": 200,
+            "protein_g": 11
+          }
+        ],
+        "breakfast": {
+          "meal": "Overnight oats: 50g oats, 200ml almond milk, 1 tbsp chia seeds, 100g berries, 1 tsp honey",
+          "fat_g": 10,
+          "carbs_g": 58,
+          "calories": 380,
+          "protein_g": 12
+        }
+      },
+      "day_5": {
+        "lunch": {
+          "meal": "Salmon tin (120g) salad: mixed greens, 50g couscous, cucumber, 1 tsp olive oil, lemon",
+          "fat_g": 18,
+          "carbs_g": 40,
+          "calories": 520,
+          "protein_g": 38
+        },
+        "dinner": {
+          "meal": "Turkey meatballs (150g cooked) with tomato sauce, 150g spaghetti squash or 100g whole wheat pasta, side salad",
+          "fat_g": 20,
+          "carbs_g": 56,
+          "calories": 620,
+          "protein_g": 48
+        },
+        "snacks": [
+          {
+            "meal": "Baby carrots (100g) + 30g hummus",
+            "fat_g": 9,
+            "carbs_g": 20,
+            "calories": 180,
+            "protein_g": 5
+          }
+        ],
+        "breakfast": {
+          "meal": "Two-egg omelette with spinach and mushrooms, 1 slice wholegrain toast",
+          "fat_g": 16,
+          "carbs_g": 28,
+          "calories": 360,
+          "protein_g": 26
+        }
+      }
+    },
+    "created_at": "2026-02-25T15:56:22.781Z",
+    "updated_at": "2026-02-25T15:56:22.788Z"
+  }
+]
+
