@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { Dumbbell } from "lucide-react";
+import { ContactDialog } from "@/components/marketing/contact-dialog";
 
 export function Footer() {
   return (
@@ -33,7 +36,13 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link href="#" className="hover:text-foreground transition-colors">About</Link></li>
               <li><Link href="#" className="hover:text-foreground transition-colors">Blog</Link></li>
-              <li><Link href="#" className="hover:text-foreground transition-colors">Contact</Link></li>
+              <li>
+                <ContactDialog>
+                  <button className="hover:text-foreground transition-colors cursor-pointer">
+                    Contact
+                  </button>
+                </ContactDialog>
+              </li>
             </ul>
           </div>
 
