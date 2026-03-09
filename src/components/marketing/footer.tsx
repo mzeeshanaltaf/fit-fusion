@@ -24,9 +24,9 @@ export function Footer() {
           <div>
             <h4 className="mb-3 text-sm font-semibold">Product</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="#features" className="hover:text-foreground transition-colors">Features</Link></li>
-              <li><Link href="#pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
-              <li><Link href="#how-it-works" className="hover:text-foreground transition-colors">How it works</Link></li>
+              <li><Link href="/#features" className="hover:text-foreground transition-colors">Features</Link></li>
+              <li><Link href="/#pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
+              <li><Link href="/#how-it-works" className="hover:text-foreground transition-colors">How it works</Link></li>
             </ul>
           </div>
 
@@ -34,7 +34,7 @@ export function Footer() {
           <div>
             <h4 className="mb-3 text-sm font-semibold">Company</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="#" className="hover:text-foreground transition-colors">About</Link></li>
+              <li><Link href="/about" className="hover:text-foreground transition-colors">About</Link></li>
               <li><Link href="#" className="hover:text-foreground transition-colors">Blog</Link></li>
               <li>
                 <ContactDialog>
@@ -50,8 +50,8 @@ export function Footer() {
           <div>
             <h4 className="mb-3 text-sm font-semibold">Legal</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="#" className="hover:text-foreground transition-colors">Privacy</Link></li>
-              <li><Link href="#" className="hover:text-foreground transition-colors">Terms</Link></li>
+              <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link></li>
+              <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link></li>
             </ul>
           </div>
         </div>

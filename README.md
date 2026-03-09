@@ -1,5 +1,7 @@
 # FitFusion — AI-Powered Fitness Plans
 
+**Live app:** [https://fitfusion.zeeshanai.cloud](https://fitfusion.zeeshanai.cloud)
+
 FitFusion is a full-stack SaaS application that generates personalized **workout plans** and **5-day nutrition plans** using AI. Users enter their profile, pick a fitness goal and training level, and receive a complete plan in under 60 seconds.
 
 ---

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/marketing/navbar";
 import { Footer } from "@/components/marketing/footer";
+import { ContactDialog } from "@/components/marketing/contact-dialog";
 import {
   Dumbbell,
   Apple,
@@ -84,6 +85,8 @@ const plans = [
     ],
     cta: "Get started",
     highlighted: false,
+    comingSoon: false,
+    contactSales: false,
   },
   {
     name: "Pro",
@@ -97,8 +100,10 @@ const plans = [
       "Export plans as PDF",
       "Priority support",
     ],
-    cta: "Start free trial",
+    cta: "Coming Soon",
     highlighted: true,
+    comingSoon: true,
+    contactSales: false,
   },
   {
     name: "Enterprise",
@@ -114,6 +119,8 @@ const plans = [
     ],
     cta: "Contact sales",
     highlighted: false,
+    comingSoon: false,
+    contactSales: true,
   },
 ];
 
@@ -177,7 +184,7 @@ export default function LandingPage() {
                 </Button>
               </SignedIn>
               <Button variant="outline" size="lg" className="px-8 text-base" asChild>
-                <Link href="#how-it-works">See how it works</Link>
+                <Link href="/#how-it-works">See how it works</Link>
               </Button>
             </div>
 
@@ -334,30 +341,37 @@ export default function LandingPage() {
                           key={f}
                           className="flex items-center gap-2.5 text-sm"
                         >
-                          <CheckCircle className="h-4 w-4 flex-shrink-0 text-primary" />
+                          <CheckCircle className="h-4 w-4 shrink-0 text-primary" />
                           {f}
                         </li>
                       ))}
                     </ul>
-                    <SignedOut>
-                      <SignInButton mode="modal">
-                        <Button
-                          className="w-full"
-                          variant={plan.highlighted ? "default" : "outline"}
-                        >
-                          {plan.cta}
-                        </Button>
-                      </SignInButton>
-                    </SignedOut>
-                    <SignedIn>
-                      <Button
-                        asChild
-                        className="w-full"
-                        variant={plan.highlighted ? "default" : "outline"}
-                      >
-                        <Link href="/dashboard">{plan.cta}</Link>
+                    {plan.comingSoon ? (
+                      <Button className="w-full" variant="default" disabled>
+                        Coming Soon
                       </Button>
-                    </SignedIn>
+                    ) : plan.contactSales ? (
+                      <ContactDialog>
+                        <Button className="w-full" variant="outline">
+                          Contact sales
+                        </Button>
+                      </ContactDialog>
+                    ) : (
+                      <>
+                        <SignedOut>
+                          <SignInButton mode="modal">
+                            <Button className="w-full" variant="outline">
+                              {plan.cta}
+                            </Button>
+                          </SignInButton>
+                        </SignedOut>
+                        <SignedIn>
+                          <Button asChild className="w-full" variant="outline">
+                            <Link href="/dashboard">{plan.cta}</Link>
+                          </Button>
+                        </SignedIn>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               ))}
