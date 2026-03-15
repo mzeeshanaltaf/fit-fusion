@@ -19,9 +19,21 @@ import {
   Apple,
   User,
   Calendar,
+  Play,
 } from "lucide-react";
 import type { DayNutrition } from "@/lib/types";
 import { useDashboardData } from "@/components/dashboard/dashboard-context";
+
+function extractYouTubeId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2];
+    if (u.hostname === "youtu.be") return u.pathname.slice(1);
+    return u.searchParams.get("v");
+  } catch {
+    return null;
+  }
+}
 
 function safeNumber(val: number | string): number {
   const n = Number(val);
@@ -139,30 +151,55 @@ export default function PlanDetailPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Exercise table */}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left text-muted-foreground">
-                        <th className="pb-2 pr-4 font-medium">Exercise</th>
-                        <th className="pb-2 pr-4 font-medium">Sets</th>
-                        <th className="pb-2 pr-4 font-medium">Reps</th>
-                        <th className="pb-2 font-medium">Rest</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {workout.workout_detail.exercises.map((ex) => (
-                        <tr key={ex.exercise_slug} className="border-b border-border/50">
-                          <td className="py-2.5 pr-4 font-medium">
-                            {ex.exercise_name}
-                          </td>
-                          <td className="py-2.5 pr-4">{ex.sets}</td>
-                          <td className="py-2.5 pr-4">{ex.reps}</td>
-                          <td className="py-2.5">{ex.rest_seconds}s</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                {/* Exercises */}
+                <div className="grid gap-4">
+                  {workout.workout_detail.exercises.map((ex) => {
+                    const videoId = ex.youtube_video_id
+                      ? extractYouTubeId(ex.youtube_video_id)
+                      : null;
+                    return (
+                      <div
+                        key={ex.exercise_slug}
+                        className="rounded-lg border border-border/50 p-4"
+                      >
+                        <div className="flex flex-col gap-4 sm:flex-row">
+                          {/* Video embed */}
+                          {videoId && (
+                            <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-md sm:w-56">
+                              <iframe
+                                src={`https://www.youtube.com/embed/${videoId}`}
+                                title={ex.exercise_name}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="absolute inset-0 h-full w-full"
+                              />
+                            </div>
+                          )}
+
+                          {/* Exercise details */}
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2">
+                              {videoId && (
+                                <Play className="h-4 w-4 text-red-500" />
+                              )}
+                              <h4 className="font-medium">{ex.exercise_name}</h4>
+                            </div>
+                            <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                              <span>
+                                <span className="font-medium text-foreground">{ex.sets}</span> sets
+                              </span>
+                              <span>
+                                <span className="font-medium text-foreground">{ex.reps}</span> reps
+                              </span>
+                              <span>
+                                <span className="font-medium text-foreground">{ex.rest_seconds}s</span> rest
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Equipment */}

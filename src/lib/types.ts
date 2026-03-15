@@ -34,6 +34,7 @@ export interface Exercise {
   rest_seconds: number;
   exercise_name: string;
   exercise_slug: string;
+  youtube_video_id?: string;
 }
 
 export interface WorkoutDetail {
