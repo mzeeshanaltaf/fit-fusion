@@ -116,3 +116,11 @@ export interface SignupCreditsResponse {
   status: "CREDITS_ASSIGNED";
   message: string;
 }
+
+// ─── Unified User Data (single webhook response) ────────────────
+export interface UserDataResponse {
+  fitness_plans: FitnessPlan[];
+  total_fitness_plan: string;
+  current_balance: number;
+  credit_history: CreditTransaction[];
+}

@@ -11,8 +11,7 @@ import {
 import type {
   FitnessPlan,
   CreditTransaction,
-  UserAnalytics,
-  CreditBalance,
+  UserDataResponse,
 } from "@/lib/types";
 
 interface DashboardData {
@@ -53,22 +52,17 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [plansData, balanceData, historyData, analyticsData] =
-      await Promise.all([
-        safeFetch<FitnessPlan[]>("/api/fitness/plans", []),
-        safeFetch<CreditBalance>("/api/credits?type=balance", {
-          current_balance: 0,
-        }),
-        safeFetch<CreditTransaction[]>("/api/credits?type=history", []),
-        safeFetch<UserAnalytics>("/api/fitness/analytics", {
-          total_fitness_plan: "0",
-        }),
-      ]);
+    const data = await safeFetch<UserDataResponse>("/api/user-data", {
+      fitness_plans: [],
+      total_fitness_plan: "0",
+      current_balance: 0,
+      credit_history: [],
+    });
 
-    setPlans(Array.isArray(plansData) ? plansData : []);
-    setCreditBalance(balanceData.current_balance ?? 0);
-    setCreditHistory(Array.isArray(historyData) ? historyData : []);
-    setTotalPlans(analyticsData.total_fitness_plan ?? "0");
+    setPlans(Array.isArray(data.fitness_plans) ? data.fitness_plans : []);
+    setCreditBalance(data.current_balance ?? 0);
+    setCreditHistory(Array.isArray(data.credit_history) ? data.credit_history : []);
+    setTotalPlans(data.total_fitness_plan ?? "0");
     setLoading(false);
   }, []);
 

@@ -2,11 +2,9 @@
 export const N8N_WEBHOOKS = {
   FITNESS_PLAN:
     "https://n8n.zeeshanai.cloud/webhook/a834eeb9-37b5-41a6-88af-1b2719c426c0",
-  USER_ANALYTICS:
-    "https://n8n.zeeshanai.cloud/webhook/f201856a-aafe-459c-af67-e6dc5be6800c",
   CREDITS:
     "https://n8n.zeeshanai.cloud/webhook/c02c7fce-1297-4e45-8baa-9f9c20c29329",
-  GET_FITNESS_PLANS:
+  USER_DATA:
     "https://n8n.zeeshanai.cloud/webhook/6fcfe67a-52c3-4ee3-a950-88a8bf5a3db0",
 } as const;
 
