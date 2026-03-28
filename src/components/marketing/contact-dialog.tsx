@@ -14,13 +14,28 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { CheckCircle, Loader2, Send } from "lucide-react";
+import { CheckCircle, Loader2, RefreshCw, Send } from "lucide-react";
 
 const NAME_MAX = 30;
 const MESSAGE_MAX = 1000;
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function generateCaptcha() {
+  const ops = ["+", "-"] as const;
+  const op = ops[Math.floor(Math.random() * ops.length)];
+  let a: number, b: number;
+  if (op === "-") {
+    a = Math.floor(Math.random() * 41) + 10;
+    b = Math.floor(Math.random() * a);
+  } else {
+    a = Math.floor(Math.random() * 41) + 10;
+    b = Math.floor(Math.random() * 41) + 10;
+  }
+  const answer = op === "+" ? a + b : a - b;
+  return { question: `${a} ${op} ${b}`, answer };
 }
 
 export function ContactDialog({ children }: { children: React.ReactNode }) {
@@ -30,14 +45,18 @@ export function ContactDialog({ children }: { children: React.ReactNode }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [captcha, setCaptcha] = useState(generateCaptcha);
+  const [captchaInput, setCaptchaInput] = useState("");
 
   const emailValid = isValidEmail(email);
+  const captchaValid = captchaInput.trim() !== "" && Number(captchaInput.trim()) === captcha.answer;
   const canSubmit =
     name.trim().length > 0 &&
     name.length <= NAME_MAX &&
     emailValid &&
     message.trim().length > 0 &&
-    message.length <= MESSAGE_MAX;
+    message.length <= MESSAGE_MAX &&
+    captchaValid;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -66,6 +85,8 @@ export function ContactDialog({ children }: { children: React.ReactNode }) {
         setName("");
         setEmail("");
         setMessage("");
+        setCaptchaInput("");
+        setCaptcha(generateCaptcha());
         setSubmitted(false);
       }, 300);
     }
@@ -168,6 +189,38 @@ export function ContactDialog({ children }: { children: React.ReactNode }) {
                 <p className="text-xs text-destructive">
                   Message must be {MESSAGE_MAX} characters or fewer.
                 </p>
+              )}
+            </div>
+
+            {/* Math Captcha */}
+            <div className="space-y-1.5">
+              <Label htmlFor="contact-captcha" className="flex items-center gap-2">
+                What is{" "}
+                <span className="rounded bg-muted px-2 py-0.5 font-mono text-sm font-semibold">
+                  {captcha.question}
+                </span>
+                ?
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCaptcha(generateCaptcha());
+                    setCaptchaInput("");
+                  }}
+                  className="ml-auto text-muted-foreground hover:text-foreground cursor-pointer"
+                  title="New question"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </button>
+              </Label>
+              <Input
+                id="contact-captcha"
+                placeholder="Your answer"
+                value={captchaInput}
+                onChange={(e) => setCaptchaInput(e.target.value)}
+                autoComplete="off"
+              />
+              {captchaInput && !captchaValid && (
+                <p className="text-xs text-destructive">Incorrect answer.</p>
               )}
             </div>
 

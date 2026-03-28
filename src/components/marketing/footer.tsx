@@ -39,7 +39,7 @@ export function Footer() {
               <li>
                 <ContactDialog>
                   <button className="hover:text-foreground transition-colors cursor-pointer">
-                    Contact
+                    Contact Us
                   </button>
                 </ContactDialog>
               </li>
