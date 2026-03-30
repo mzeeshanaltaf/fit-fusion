@@ -35,8 +35,7 @@ export function Footer() {
             <h4 className="mb-3 text-sm font-semibold">Company</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link href="/about" className="hover:text-foreground transition-colors">About</Link></li>
-              <li><Link href="#" className="hover:text-foreground transition-colors">Blog</Link></li>
-              <li>
+<li>
                 <ContactDialog>
                   <button className="hover:text-foreground transition-colors cursor-pointer">
                     Contact Us
