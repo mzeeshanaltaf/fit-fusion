@@ -161,6 +161,7 @@ export default function GeneratePlanPage() {
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender</Label>
                 <Select
+                  key={form.gender || "unset"}
                   value={form.gender || undefined}
                   onValueChange={(v) => updateField("gender", v)}
                 >
