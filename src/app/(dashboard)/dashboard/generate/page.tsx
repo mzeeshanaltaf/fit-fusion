@@ -161,7 +161,7 @@ export default function GeneratePlanPage() {
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender</Label>
                 <Select
-                  value={form.gender}
+                  value={form.gender || undefined}
                   onValueChange={(v) => updateField("gender", v)}
                 >
                   <SelectTrigger id="gender">
