@@ -19,10 +19,10 @@ import {
   Apple,
   User,
   Calendar,
-  Play,
 } from "lucide-react";
 import type { DayNutrition } from "@/lib/types";
 import { useDashboardData } from "@/components/dashboard/dashboard-context";
+import { YouTubePlayerDialog } from "@/components/dashboard/youtube-player-dialog";
 
 function extractYouTubeId(url: string): string | null {
   try {
@@ -165,23 +165,15 @@ export default function PlanDetailPage() {
                         <div className="flex flex-col gap-4 sm:flex-row">
                           {/* Video embed */}
                           {videoId && (
-                            <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-md sm:w-56">
-                              <iframe
-                                src={`https://www.youtube.com/embed/${videoId}`}
-                                title={ex.exercise_name}
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                                className="absolute inset-0 h-full w-full"
-                              />
-                            </div>
+                            <YouTubePlayerDialog
+                              videoId={videoId}
+                              exerciseName={ex.exercise_name}
+                            />
                           )}
 
                           {/* Exercise details */}
                           <div className="flex-1 space-y-2">
                             <div className="flex items-center gap-2">
-                              {videoId && (
-                                <Play className="h-4 w-4 text-red-500" />
-                              )}
                               <h4 className="font-medium">{ex.exercise_name}</h4>
                             </div>
                             <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">

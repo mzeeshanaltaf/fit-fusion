@@ -21,13 +21,14 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Dumbbell } from "lucide-react";
+import { Dumbbell } from "lucide-react";
 import {
   FITNESS_GOALS,
   TRAINING_LEVELS,
   GENDER_OPTIONS,
 } from "@/lib/constants";
 import { useDashboardData } from "@/components/dashboard/dashboard-context";
+import { PlanGenerationDialog } from "@/components/dashboard/plan-generation-dialog";
 
 const PROFILE_STORAGE_KEY = "fitfusion-profile-defaults";
 
@@ -246,21 +247,16 @@ export default function GeneratePlanPage() {
               disabled={loading || !isFormValid}
               className="w-full gap-2 sm:w-auto"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Dumbbell className="h-4 w-4" />
-                  Generate Plan
-                </>
-              )}
+              <>
+                <Dumbbell className="h-4 w-4" />
+                Generate Plan
+              </>
             </Button>
           </form>
         </CardContent>
       </Card>
+
+      <PlanGenerationDialog open={loading} />
     </div>
   );
 }
