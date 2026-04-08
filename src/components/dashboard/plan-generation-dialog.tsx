@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Dumbbell } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ShimmeringText } from "@/components/ui/shimmering-text";
 
 const MESSAGES = [
   "Agent is thinking...",
@@ -27,7 +26,6 @@ export function PlanGenerationDialog({ open }: PlanGenerationDialogProps) {
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
-    // Clear any running timers first
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
 
@@ -36,7 +34,6 @@ export function PlanGenerationDialog({ open }: PlanGenerationDialogProps) {
       return;
     }
 
-    // Schedule transitions for messages 1–4 (message 0 shown immediately)
     for (let i = 1; i < MESSAGES.length; i++) {
       const id = setTimeout(() => setMessageIndex(i), DELAYS[i]);
       timersRef.current.push(id);
@@ -62,9 +59,24 @@ export function PlanGenerationDialog({ open }: PlanGenerationDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <p className="animate-gradient-text text-xl font-semibold">
-              {MESSAGES[messageIndex]}
-            </p>
+            <div className="flex min-h-8 items-center justify-center text-xl font-semibold">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={messageIndex}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ShimmeringText
+                    text={MESSAGES[messageIndex]}
+                    duration={2.5}
+                    spread={3}
+                    startOnView={false}
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
             <p className="text-sm text-muted-foreground">
               This may take up to a minute...
             </p>
