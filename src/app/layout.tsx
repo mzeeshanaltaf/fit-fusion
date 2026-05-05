@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const geist = Geist({
@@ -34,6 +35,7 @@ export default function RootLayout({
             {children}
             <Toaster richColors position="top-right" />
           </ThemeProvider>
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
