@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import { Navbar } from "@/components/marketing/navbar";
 import { Footer } from "@/components/marketing/footer";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "Learn how FitFusion collects, uses, and protects your personal data when you use our AI-powered fitness planning service.",
+  alternates: { canonical: "/privacy" },
+  robots: { index: true, follow: true },
+};
 
 const EFFECTIVE_DATE = "March 1, 2026";
 

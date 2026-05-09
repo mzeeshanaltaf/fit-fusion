@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import { Navbar } from "@/components/marketing/navbar";
 import { Footer } from "@/components/marketing/footer";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "Read the Terms of Service for FitFusion — your rights, responsibilities, and the rules governing use of our AI-powered fitness planning platform.",
+  alternates: { canonical: "/terms" },
+};
 
 const EFFECTIVE_DATE = "March 1, 2026";
 

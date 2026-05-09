@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { Navbar } from "@/components/marketing/navbar";
 import { Footer } from "@/components/marketing/footer";
 import { Badge } from "@/components/ui/badge";
 import { Dumbbell, Target, Zap, Heart } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "About",
+  description:
+    "FitFusion was built to make personalized, AI-driven fitness coaching accessible to everyone — every body, every goal.",
+  alternates: { canonical: "/about" },
+};
 
 const values = [
   {
@@ -113,12 +122,12 @@ export default function AboutPage() {
               We take your privacy seriously. Your personal data is used only to
               generate and store your fitness plans, and is never sold or shared
               with third parties. See our{" "}
-              <a
+              <Link
                 href="/privacy"
                 className="text-primary underline underline-offset-4 hover:opacity-80"
               >
                 Privacy Policy
-              </a>{" "}
+              </Link>{" "}
               for details.
             </p>
           </div>

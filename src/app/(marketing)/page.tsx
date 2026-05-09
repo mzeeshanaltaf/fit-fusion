@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -138,14 +139,51 @@ export default function LandingPage() {
       <Navbar />
 
       <main className="flex-1">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  name: "FitFusion",
+                  url: "https://fitfusion.zeeshanai.cloud",
+                  logo: "https://fitfusion.zeeshanai.cloud/icon",
+                  sameAs: [],
+                },
+                {
+                  "@type": "WebSite",
+                  name: "FitFusion",
+                  url: "https://fitfusion.zeeshanai.cloud",
+                },
+                {
+                  "@type": "SoftwareApplication",
+                  name: "FitFusion",
+                  applicationCategory: "HealthApplication",
+                  operatingSystem: "Web",
+                  offers: {
+                    "@type": "Offer",
+                    price: "0",
+                    priceCurrency: "USD",
+                  },
+                },
+              ],
+            }),
+          }}
+        />
+
         {/* Hero */}
         <section className="relative flex min-h-[60vh] items-center overflow-hidden pt-24 pb-16 sm:pt-32 sm:pb-20 md:min-h-[80vh] lg:pt-48 lg:pb-32">
           {/* Background image */}
           <div className="absolute inset-0 -z-10 bg-black">
-            <img
+            <Image
               src="/fitfusion_hero_bg.png"
-              alt=""
-              className="h-full w-full object-cover object-top-right md:object-center"
+              alt="Athlete training with dumbbells in a modern gym"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-top-right md:object-center"
             />
             <div className="absolute inset-0 bg-black/70 md:bg-transparent md:bg-linear-to-r md:from-black/80 md:via-black/60 md:to-black/30" />
           </div>
