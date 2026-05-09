@@ -29,6 +29,7 @@ FitFusion is a full-stack SaaS application that generates personalized **workout
 | AI Backend | n8n workflows |
 | Notifications | Sonner |
 | Dark Mode | next-themes |
+| Analytics | Vercel Analytics |
 
 ---
 
@@ -69,10 +70,13 @@ Open [http://localhost:3000](http://localhost:3000).
 ```
 src/
 ├── app/
-│   ├── (marketing)/          # Public landing page
-│   │   └── page.tsx
-│   ├── (dashboard)/          # Authenticated dashboard
-│   │   ├── layout.tsx        # Wraps all dashboard pages with DashboardDataProvider
+│   ├── (marketing)/          # Public landing page + legal pages
+│   │   ├── page.tsx          # Home — JSON-LD structured data, next/image hero
+│   │   ├── about/
+│   │   ├── privacy/
+│   │   └── terms/
+│   ├── (dashboard)/          # Authenticated dashboard (noindex)
+│   │   ├── layout.tsx        # Wraps all dashboard pages; sets robots: noindex
 │   │   └── dashboard/
 │   │       ├── page.tsx      # Overview (stats, quick actions)
 │   │       ├── generate/     # Generate a new fitness plan
@@ -87,6 +91,13 @@ src/
 │   │   │   └── analytics/    # GET → n8n user_analytics webhook
 │   │   ├── credits/          # GET → n8n credit webhooks (?type=balance|history)
 │   │   └── webhooks/clerk/   # Clerk webhook → assign 5 credits on user.created
+│   ├── opengraph-image.tsx   # 1200×630 OG card (edge ImageResponse)
+│   ├── twitter-image.tsx     # 1200×630 Twitter card (edge ImageResponse)
+│   ├── icon.tsx              # 32×32 brand favicon (edge ImageResponse)
+│   ├── apple-icon.tsx        # 180×180 Apple touch icon (edge ImageResponse)
+│   ├── robots.ts             # Crawl rules — allows /, blocks /dashboard and /api
+│   ├── sitemap.ts            # Marketing routes with priority/changeFrequency
+│   ├── manifest.ts           # PWA web manifest
 │   └── globals.css           # Tailwind + teal/green primary color (OKLCH)
 ├── components/
 │   ├── dashboard/
@@ -147,6 +158,30 @@ Dashboard data (plans, credit balance, transaction history, analytics) is fetche
 npm run build
 npm start
 ```
+
+---
+
+## SEO
+
+The marketing surface (`/`, `/about`, `/privacy`, `/terms`) is fully optimised for search and social sharing. The dashboard is auth-gated and explicitly excluded from indexing.
+
+| Feature | Implementation |
+|---|---|
+| Metadata | `metadataBase`, `title.template`, OG, Twitter, keywords in root `layout.tsx` |
+| Per-page titles & canonicals | `export const metadata` on each marketing page |
+| Dashboard exclusion | `robots: { index: false }` on `(dashboard)/layout.tsx` |
+| Crawl rules | `robots.ts` — allows `/`, disallows `/dashboard`, `/api` |
+| Sitemap | `sitemap.ts` — 4 marketing routes, auto-served at `/sitemap.xml` |
+| Structured data | JSON-LD `@graph` (Organization, WebSite, SoftwareApplication) on home page |
+| OG / Twitter images | Edge `ImageResponse` at `/opengraph-image` and `/twitter-image` (1200×630) |
+| Icons | Edge `ImageResponse` at `/icon` (32×32) and `/apple-icon` (180×180) |
+| PWA manifest | `manifest.ts` served at `/manifest.webmanifest` |
+| Hero image | `next/image` with `priority` and `fill` for optimal LCP |
+
+**Post-deploy verification:**
+- Rich Results Test: `https://search.google.com/test/rich-results`
+- OG preview: `https://www.opengraph.xyz/`
+- Submit sitemap in Google Search Console: `https://fitfusion.zeeshanai.cloud/sitemap.xml`
 
 ---
 
