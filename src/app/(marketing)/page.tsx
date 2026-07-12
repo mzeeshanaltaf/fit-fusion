@@ -90,7 +90,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "$12",
+    price: "$2.99",
     period: "per month",
     description: "For dedicated fitness enthusiasts.",
     features: [
