@@ -52,7 +52,7 @@ export default function PrivacyPage() {
                 <li>
                   <strong className="text-foreground">Account data</strong> —
                   name, email address, and authentication credentials managed by
-                  Clerk.
+                  Better Auth.
                 </li>
                 <li>
                   <strong className="text-foreground">Profile data</strong> —
@@ -122,15 +122,20 @@ export default function PrivacyPage() {
               </p>
               <ul className="list-disc space-y-2 pl-5">
                 <li>
-                  <strong className="text-foreground">Clerk</strong> — for
-                  authentication and user management. See{" "}
+                  <strong className="text-foreground">Better Auth</strong> — a
+                  self-hosted authentication system used for sign-in and user
+                  management. Authentication data is stored in our own database.
+                </li>
+                <li>
+                  <strong className="text-foreground">Google</strong> — optional
+                  sign-in via your Google account. See{" "}
                   <a
-                    href="https://clerk.com/privacy"
+                    href="https://policies.google.com/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary underline underline-offset-4 hover:opacity-80"
                   >
-                    Clerk&apos;s Privacy Policy
+                    Google&apos;s Privacy Policy
                   </a>
                   .
                 </li>

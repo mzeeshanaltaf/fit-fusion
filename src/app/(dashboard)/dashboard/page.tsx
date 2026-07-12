@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "@/lib/auth-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,8 @@ import { Dumbbell, CreditCard, TrendingUp, ArrowRight } from "lucide-react";
 import { useDashboardData } from "@/components/dashboard/dashboard-context";
 
 export default function DashboardPage() {
-  const { user } = useUser();
+  const { data: session } = useSession();
+  const firstName = session?.user?.name?.trim().split(/\s+/)[0] ?? "there";
   const { plans, totalPlans, creditBalance, loading } = useDashboardData();
 
   const latestPlan = plans.length
@@ -54,7 +55,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">
-          Welcome back, {user?.firstName ?? "there"}
+          Welcome back, {firstName}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Here is an overview of your fitness plan activity.

@@ -1,10 +1,11 @@
 "use client";
 
-import { UserButton } from "@clerk/nextjs";
 import { Menu, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UserMenu } from "@/components/auth/user-menu";
+import { useSession } from "@/lib/auth-client";
 import { Sidebar } from "./sidebar";
 import { useDashboardData } from "@/components/dashboard/dashboard-context";
 
@@ -14,6 +15,7 @@ interface TopNavProps {
 
 export function TopNav({ breadcrumb = "Dashboard" }: TopNavProps) {
   const { creditBalance, loading } = useDashboardData();
+  const { data: session } = useSession();
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-background px-4">
@@ -47,7 +49,7 @@ export function TopNav({ breadcrumb = "Dashboard" }: TopNavProps) {
           </div>
         )}
         <ThemeToggle />
-        <UserButton />
+        {session?.user && <UserMenu user={session.user} />}
       </div>
     </header>
   );

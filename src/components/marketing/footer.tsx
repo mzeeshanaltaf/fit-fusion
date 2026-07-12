@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Dumbbell } from "lucide-react";
-import { ContactDialog } from "@/components/marketing/contact-dialog";
 
 export function Footer() {
   return (
@@ -35,13 +34,7 @@ export function Footer() {
             <h4 className="mb-3 text-sm font-semibold">Company</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link href="/about" className="hover:text-foreground transition-colors">About</Link></li>
-<li>
-                <ContactDialog>
-                  <button className="hover:text-foreground transition-colors cursor-pointer">
-                    Contact Us
-                  </button>
-                </ContactDialog>
-              </li>
+              <li><Link href="/contact" className="hover:text-foreground transition-colors">Contact Us</Link></li>
             </ul>
           </div>
 

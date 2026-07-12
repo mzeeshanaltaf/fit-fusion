@@ -1,12 +1,13 @@
-import { auth } from "@clerk/nextjs/server";
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { callN8nWebhook } from "@/lib/n8n";
 import { N8N_WEBHOOKS } from "@/lib/constants";
 import type { GeneratePlanResponse } from "@/lib/types";
 
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
       N8N_WEBHOOKS.FITNESS_PLAN,
       {
         event_type: "fitness-plan",
-        user_id: userId,
+        user_id: session.user.id,
         age: Number(age),
         weight_kg: Number(weight_kg),
         gender,

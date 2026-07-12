@@ -25,11 +25,12 @@ FitFusion is a full-stack SaaS application that generates personalized **workout
 | Language | TypeScript 5 |
 | Styling | Tailwind CSS 4 |
 | UI | shadcn/ui + Radix UI |
-| Auth | Clerk |
+| Auth | Better Auth (email/password + Google) |
+| Database | Postgres (`fit_fusion` schema) |
 | AI Backend | n8n workflows |
 | Notifications | Sonner |
 | Dark Mode | next-themes |
-| Analytics | Vercel Analytics |
+| Analytics | Umami (self-hosted) |
 
 ---
 
@@ -46,14 +47,20 @@ npm install
 Copy `.env.example` to `.env.local` and fill in your values:
 
 ```env
-# Clerk — https://clerk.com/
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-CLERK_WEBHOOK_SECRET=
+# Better Auth — https://better-auth.com/
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=http://localhost:3000
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# Postgres (Better Auth tables live in the fit_fusion schema)
+DATABASE_URL=
 
 # n8n API key (sent as x-api-key header to all webhook calls)
 N8N_API_KEY=
 ```
+
+See `.env.example` for the full list (contact webhook, Upstash, Umami).
 
 ### 3. Run the development server
 
@@ -90,7 +97,8 @@ src/
 │   │   │   ├── plans/        # GET → n8n get_fitness_plan webhook
 │   │   │   └── analytics/    # GET → n8n user_analytics webhook
 │   │   ├── credits/          # GET → n8n credit webhooks (?type=balance|history)
-│   │   └── webhooks/clerk/   # Clerk webhook → assign 5 credits on user.created
+│   │   ├── contact/          # POST → n8n contact webhook (honeypot + rate limit)
+│   │   └── auth/[...all]/    # Better Auth handler (sign-in/up, OAuth, session)
 │   ├── opengraph-image.tsx   # 1200×630 OG card (edge ImageResponse)
 │   ├── twitter-image.tsx     # 1200×630 Twitter card (edge ImageResponse)
 │   ├── icon.tsx              # 32×32 brand favicon (edge ImageResponse)
@@ -142,7 +150,7 @@ All API routes act as server-side proxies to n8n workflows. The `N8N_API_KEY` is
 | `user_analytics` | GET `/api/fitness/analytics` | Total plan count |
 | `get_remaining_credit` | GET `/api/credits?type=balance` | Current credit balance |
 | `credit_history` | GET `/api/credits?type=history` | Transaction history |
-| `signup_credits` | Clerk `user.created` webhook | Assign 5 free credits |
+| `signup_credits` | Better Auth user-create hook | Assign 5 free credits |
 
 ---
 

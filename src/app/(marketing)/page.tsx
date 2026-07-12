@@ -1,12 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
-import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/marketing/navbar";
 import { Footer } from "@/components/marketing/footer";
-import { ContactDialog } from "@/components/marketing/contact-dialog";
+import { AuthCta } from "@/components/auth/auth-cta";
 import {
   Dumbbell,
   Apple,
@@ -207,29 +206,13 @@ export default function LandingPage() {
               </p>
 
               <div className="flex flex-col gap-4 sm:flex-row">
-                <SignedOut>
-                  <SignInButton mode="modal">
-                    <Button
-                      size="lg"
-                      className="gap-2 rounded-lg bg-emerald-600 px-8 py-4 text-base font-semibold text-white hover:bg-emerald-700"
-                    >
-                      Start for free
-                      <ArrowRight className="h-5 w-5" />
-                    </Button>
-                  </SignInButton>
-                </SignedOut>
-                <SignedIn>
-                  <Button
-                    asChild
-                    size="lg"
-                    className="gap-2 rounded-lg bg-emerald-600 px-8 py-4 text-base font-semibold text-white hover:bg-emerald-700"
-                  >
-                    <Link href="/dashboard">
-                      Go to Dashboard
-                      <ArrowRight className="h-5 w-5" />
-                    </Link>
-                  </Button>
-                </SignedIn>
+                <AuthCta
+                  loggedOutLabel="Start for free"
+                  loggedInLabel="Go to Dashboard"
+                  size="lg"
+                  className="gap-2 rounded-lg bg-emerald-600 px-8 py-4 text-base font-semibold text-white hover:bg-emerald-700"
+                  arrowClassName="h-5 w-5"
+                />
                 <Button
                   variant="outline"
                   size="lg"
@@ -389,26 +372,17 @@ export default function LandingPage() {
                         Coming Soon
                       </Button>
                     ) : plan.contactSales ? (
-                      <ContactDialog>
-                        <Button className="w-full" variant="outline">
-                          Contact sales
-                        </Button>
-                      </ContactDialog>
+                      <Button asChild className="w-full" variant="outline">
+                        <Link href="/contact">Contact sales</Link>
+                      </Button>
                     ) : (
-                      <>
-                        <SignedOut>
-                          <SignInButton mode="modal">
-                            <Button className="w-full" variant="outline">
-                              {plan.cta}
-                            </Button>
-                          </SignInButton>
-                        </SignedOut>
-                        <SignedIn>
-                          <Button asChild className="w-full" variant="outline">
-                            <Link href="/dashboard">{plan.cta}</Link>
-                          </Button>
-                        </SignedIn>
-                      </>
+                      <AuthCta
+                        loggedOutLabel={plan.cta}
+                        loggedInLabel={plan.cta}
+                        variant="outline"
+                        className="w-full"
+                        showArrow={false}
+                      />
                     )}
                   </CardContent>
                 </Card>
@@ -431,25 +405,13 @@ export default function LandingPage() {
             <p className="mb-8 text-primary-foreground/80">
               Join thousands already using FitFusion to reach their goals.
             </p>
-            <SignedOut>
-              <SignInButton mode="modal">
-                <Button size="lg" variant="secondary" className="gap-2 px-8">
-                  Get started for free <ArrowRight className="h-4 w-4" />
-                </Button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <Button
-                asChild
-                size="lg"
-                variant="secondary"
-                className="gap-2 px-8"
-              >
-                <Link href="/dashboard">
-                  Go to Dashboard <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </SignedIn>
+            <AuthCta
+              loggedOutLabel="Get started for free"
+              loggedInLabel="Go to Dashboard"
+              size="lg"
+              variant="secondary"
+              className="gap-2 px-8"
+            />
           </div>
         </section>
       </main>
