@@ -41,6 +41,12 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  function verifyUrl() {
+    return `/verify-email?email=${encodeURIComponent(
+      email.trim()
+    )}&redirect=${encodeURIComponent("/dashboard")}`;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -48,9 +54,24 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
       const { error } = isSignUp
         ? await signUp.email({ name: name.trim(), email: email.trim(), password })
         : await signIn.email({ email: email.trim(), password });
+
       if (error) {
+        // The account exists but isn't verified. The server has already sent a
+        // fresh code (emailVerification.sendOnSignIn), so hand off to the
+        // verify screen rather than showing an error the user can't act on.
+        if (error.code === "EMAIL_NOT_VERIFIED") {
+          router.push(verifyUrl());
+          return;
+        }
         throw new Error(error.message ?? "Authentication failed.");
       }
+
+      if (isSignUp) {
+        // requireEmailVerification means sign-up issues no session.
+        router.push(verifyUrl());
+        return;
+      }
+
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
@@ -140,7 +161,17 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Password</Label>
+            {!isSignUp && (
+              <Link
+                href="/forgot-password"
+                className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+              >
+                Forgot password?
+              </Link>
+            )}
+          </div>
           <Input
             id="password"
             name="password"

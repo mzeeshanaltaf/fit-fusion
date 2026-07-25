@@ -8,6 +8,13 @@ export const N8N_WEBHOOKS = {
     "https://n8n.zeeshanai.cloud/webhook/6fcfe67a-52c3-4ee3-a950-88a8bf5a3db0",
 } as const;
 
+// ─── Auth Email ───────────────────────────────────────────────────
+// Address the OTP emails arrive from. Client-safe (no secret): the auth
+// screens name it in their "check your spam folder" note, and the server
+// sender falls back to it, so the copy and the real `from` can't drift.
+// Must match the address in RESEND_FROM_EMAIL.
+export const OTP_SENDER_EMAIL = "noreply@verification.zeeshanai.cloud";
+
 // ─── Fitness Domain Options ───────────────────────────────────────
 export const FITNESS_GOALS = [
   { value: "fat_loss", label: "Fat Loss" },

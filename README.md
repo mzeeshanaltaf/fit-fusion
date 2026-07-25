@@ -12,6 +12,8 @@ FitFusion is a full-stack SaaS application that generates personalized **workout
 - **5-Day Nutrition Plans** — Breakfast, lunch, dinner, and snacks with full macro breakdowns (calories, protein, carbs, fat)
 - **Goal-Specific Training** — Fat Loss, Muscle Gain, Maintenance, Strength, Endurance
 - **Credit System** — 5 free credits on signup; 1 credit per plan generated
+- **Email OTP Verification** — 6-digit code required before an email/password account gets a session
+- **Password Reset** — Self-service "forgot password" via emailed OTP
 - **Dark Mode** — System, light, and dark theme support
 - **Profile Defaults** — Save your measurements once; the form pre-fills on every visit
 
@@ -25,8 +27,9 @@ FitFusion is a full-stack SaaS application that generates personalized **workout
 | Language | TypeScript 5 |
 | Styling | Tailwind CSS 4 |
 | UI | shadcn/ui + Radix UI |
-| Auth | Better Auth (email/password + Google) |
+| Auth | Better Auth (email/password + Google, email OTP) |
 | Database | Postgres (`fit_fusion` schema) |
+| Transactional Email | Resend |
 | AI Backend | n8n workflows |
 | Notifications | Sonner |
 | Dark Mode | next-themes |
@@ -56,6 +59,12 @@ GOOGLE_CLIENT_SECRET=
 # Postgres (Better Auth tables live in the fit_fusion schema)
 DATABASE_URL=
 
+# Resend — delivers the auth OTP emails.
+# Leave RESEND_FROM_EMAIL UNQUOTED: dotenv strips quotes locally, but hosting
+# dashboards pass the raw string through and Resend then 422s on `from`.
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=FitFusion <noreply@verification.zeeshanai.cloud>
+
 # n8n API key (sent as x-api-key header to all webhook calls)
 N8N_API_KEY=
 ```
@@ -80,8 +89,14 @@ src/
 │   ├── (marketing)/          # Public landing page + legal pages
 │   │   ├── page.tsx          # Home — JSON-LD structured data, next/image hero
 │   │   ├── about/
+│   │   ├── contact/          # Contact form (honeypot + rate limit)
 │   │   ├── privacy/
 │   │   └── terms/
+│   ├── (auth)/               # Centered auth layout (noindex)
+│   │   ├── sign-in/
+│   │   ├── sign-up/
+│   │   ├── verify-email/     # 6-digit OTP entry (Suspense-wrapped)
+│   │   └── forgot-password/  # Request code → reset password
 │   ├── (dashboard)/          # Authenticated dashboard (noindex)
 │   │   ├── layout.tsx        # Wraps all dashboard pages; sets robots: noindex
 │   │   └── dashboard/
@@ -108,6 +123,13 @@ src/
 │   ├── manifest.ts           # PWA web manifest
 │   └── globals.css           # Tailwind + teal/green primary color (OKLCH)
 ├── components/
+│   ├── auth/
+│   │   ├── auth-form.tsx          # Sign-in / sign-up (shared)
+│   │   ├── verify-email-form.tsx
+│   │   ├── forgot-password-form.tsx
+│   │   ├── otp-field.tsx          # 6-box OTP input + spam-folder note
+│   │   ├── user-menu.tsx
+│   │   └── auth-cta.tsx
 │   ├── dashboard/
 │   │   ├── dashboard-context.tsx  # React Context — fetches & caches all dashboard data
 │   │   ├── sidebar.tsx
@@ -118,9 +140,14 @@ src/
 │   ├── ui/                   # shadcn/ui components
 │   ├── theme-provider.tsx
 │   └── theme-toggle.tsx
+├── hooks/
+│   └── use-cooldown.ts       # Resend-code countdown (mirrors server rate limit)
 └── lib/
     ├── types.ts              # All TypeScript interfaces
     ├── constants.ts          # n8n webhook URLs + form options
+    ├── auth.ts               # Better Auth server config (emailOTP plugin)
+    ├── auth-client.ts        # Better Auth React client
+    ├── email.ts              # Resend sender + OTP email template
     └── n8n.ts               # Webhook client with auth + safe JSON parsing
 ```
 
@@ -136,6 +163,40 @@ src/
 | `/dashboard/plans/[id]` | Plan detail with Workouts, Nutrition, and Profile tabs |
 | `/dashboard/credits` | Current balance + full transaction history |
 | `/dashboard/settings` | Save default profile values (pre-fills the generate form) |
+
+---
+
+## Authentication
+
+Better Auth handles sessions, Google OAuth, and email/password. Email verification and
+password reset run on the `emailOTP` plugin, with codes delivered by Resend.
+
+| Flow | Behaviour |
+|---|---|
+| Sign up (email/password) | Account is created but **no session is issued** — the user must enter a 6-digit code first |
+| Sign in, unverified account | Returns `EMAIL_NOT_VERIFIED`; a fresh code is sent automatically and the user is routed to `/verify-email` |
+| Verify code | Flips `emailVerified` **and signs the user in** (`autoSignInAfterVerification`) |
+| Forgot password | Emailed code → new password → redirect to `/sign-in` (reset does **not** create a session) |
+| Google sign-in | Arrives pre-verified; never sees the OTP flow |
+
+Codes are 6 digits, expire after 10 minutes, allow 3 attempts, and are **hashed at rest**.
+They are stored in Better Auth's existing `verification` table, so enabling this required
+**no database migration**.
+
+**Notes for maintainers**
+
+- `requestPasswordReset` returns success even for addresses with no account, and
+  re-registering an existing email returns a generic success. This is deliberate
+  anti-enumeration behaviour — keep the UI copy neutral.
+- Better Auth wraps the email sender in `runInBackgroundOrAwait`, so **send failures are
+  swallowed**: the endpoint still returns `{ success: true }` and the UI still says
+  "code sent". Never conclude email works from the UI — check the Resend dashboard.
+- Run the config preflight (validates the key, `from` format, verified domain, and
+  `<Toaster />` placement, sending only to Resend's sink address):
+
+  ```bash
+  node ~/.claude/skills/better-auth-email-otp/scripts/preflight.mjs --app-dir src/app
+  ```
 
 ---
 
