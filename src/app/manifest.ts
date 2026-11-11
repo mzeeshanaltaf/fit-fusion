@@ -5,11 +5,11 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "FitFusion",
     short_name: "FitFusion",
     description:
-      "Generate personalized workout and nutrition plans powered by AI.",
+      "A workout plan and 5 days of meals, built from your profile.",
     start_url: "/",
     display: "standalone",
-    theme_color: "#059669",
-    background_color: "#0a0a0a",
+    theme_color: "#c82700",
+    background_color: "#f8f5f1",
     icons: [
       {
         src: "/icon",

@@ -1,208 +1,144 @@
 import type { Metadata } from "next";
-import { Navbar } from "@/components/marketing/navbar";
-import { Footer } from "@/components/marketing/footer";
+import { LegalPage, LegalSection } from "@/components/marketing/legal";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "Learn how FitFusion collects, uses, and protects your personal data when you use our AI-powered fitness planning service.",
+    "What FitFusion collects, why, who processes it, and how to have it deleted.",
   alternates: { canonical: "/privacy" },
   robots: { index: true, follow: true },
 };
 
-const EFFECTIVE_DATE = "March 1, 2026";
-
 export default function PrivacyPage() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
+    <LegalPage title="Privacy Policy" effective="November 11, 2026">
+      <LegalSection title="1. Who this covers">
+        <p>
+          FitFusion (&quot;we&quot;, &quot;us&quot;) runs this website at
+          fitfusion.zeeshanai.cloud. This policy says what we collect, what we
+          do with it and who else touches it.
+        </p>
+      </LegalSection>
 
-      <main className="flex-1 px-4 py-16">
-        <div className="container mx-auto max-w-3xl">
-          <h1 className="mb-2 text-3xl font-extrabold tracking-tight md:text-4xl">
-            Privacy Policy
-          </h1>
-          <p className="mb-10 text-sm text-muted-foreground">
-            Effective date: {EFFECTIVE_DATE}
-          </p>
+      <LegalSection title="2. What we collect">
+        <ul>
+          <li>
+            <strong>Account data:</strong> name, email address and a hashed
+            password, or your Google account identifier if you sign in with
+            Google.
+          </li>
+          <li>
+            <strong>Profile data:</strong> age, weight, height, gender, goal,
+            training level, diet, allergies, equipment and training days, as you
+            enter them to build a plan.
+          </li>
+          <li>
+            <strong>Plan data:</strong> the workout and nutrition plans we build
+            for you, and your credit balance and history.
+          </li>
+          <li>
+            <strong>Messages:</strong> name, email and text you send through
+            the contact form.
+          </li>
+          <li>
+            <strong>Usage data:</strong> page views and basic device information,
+            counted by our analytics tool. See section 6.
+          </li>
+        </ul>
+      </LegalSection>
 
-          <div className="space-y-10 text-sm leading-relaxed text-muted-foreground">
-            <section>
-              <h2 className="mb-3 text-base font-semibold text-foreground">
-                1. Introduction
-              </h2>
-              <p>
-                FitFusion (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;)
-                is committed to protecting your personal information. This
-                Privacy Policy explains what data we collect, how we use it, and
-                your rights regarding that data when you use our website and
-                services at fitfusion.app.
-              </p>
-            </section>
+      <LegalSection title="3. What we use it for">
+        <ul>
+          <li>To build, store and show your plans.</li>
+          <li>To run your account, sign-in and credits.</li>
+          <li>To email you sign-in and password codes.</li>
+          <li>To answer messages you send us.</li>
+          <li>To see which pages are used and fix what is broken.</li>
+        </ul>
+        <p>
+          We do <strong>not</strong> sell your data and we do not use it for
+          advertising.
+        </p>
+      </LegalSection>
 
-            <section>
-              <h2 className="mb-3 text-base font-semibold text-foreground">
-                2. Information We Collect
-              </h2>
-              <p className="mb-3">
-                We collect information you provide directly and information
-                generated as you use the service:
-              </p>
-              <ul className="list-disc space-y-2 pl-5">
-                <li>
-                  <strong className="text-foreground">Account data</strong> —
-                  name, email address, and authentication credentials managed by
-                  Better Auth.
-                </li>
-                <li>
-                  <strong className="text-foreground">Profile data</strong> —
-                  age, weight, height, gender, fitness goal, and training level
-                  that you enter when generating a plan.
-                </li>
-                <li>
-                  <strong className="text-foreground">
-                    Generated plan data
-                  </strong>{" "}
-                  — workout and nutrition plans produced by our AI and stored
-                  against your account.
-                </li>
-                <li>
-                  <strong className="text-foreground">Usage data</strong> —
-                  pages visited, actions taken, and session metadata collected
-                  automatically for service improvement.
-                </li>
-              </ul>
-            </section>
+      <LegalSection title="4. Who processes it for us">
+        <ul>
+          <li>
+            <strong>OpenAI:</strong> when you build a plan, your profile inputs
+            (age, weight, height, gender, goal, level, diet, allergies,
+            equipment, training days) are sent to an OpenAI model that picks
+            workouts and writes meals. Your name and email are not sent.
+          </li>
+          <li>
+            <strong>Resend:</strong> delivers the six-digit codes we email you.
+            It receives your email address.
+          </li>
+          <li>
+            <strong>Google:</strong> only if you choose &quot;Continue with
+            Google&quot;. See{" "}
+            <a
+              href="https://policies.google.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Google&apos;s privacy policy
+            </a>
+            .
+          </li>
+          <li>
+            <strong>n8n:</strong> receives the messages you send through the
+            contact form.
+          </li>
+          <li>
+            <strong>Upstash:</strong> counts contact-form submissions per IP
+            address to limit spam.
+          </li>
+        </ul>
+        <p>
+          Sign-in (Better Auth), the database and the analytics tool run on a
+          server we operate.
+        </p>
+      </LegalSection>
 
-            <section>
-              <h2 className="mb-3 text-base font-semibold text-foreground">
-                3. How We Use Your Information
-              </h2>
-              <ul className="list-disc space-y-2 pl-5">
-                <li>To generate and store your personalized fitness plans.</li>
-                <li>To manage your account and credit balance.</li>
-                <li>
-                  To respond to support requests or contact form submissions.
-                </li>
-                <li>
-                  To improve and maintain the quality of the FitFusion service.
-                </li>
-                <li>
-                  To send transactional emails related to your account (e.g.,
-                  sign-in notifications).
-                </li>
-              </ul>
-              <p className="mt-3">
-                We do <strong className="text-foreground">not</strong> sell your
-                personal data to third parties or use it for advertising
-                purposes.
-              </p>
-            </section>
+      <LegalSection title="5. Storage and security">
+        <p>
+          Data is stored in our database and sent over HTTPS. Passwords are
+          stored hashed. Secrets and API keys stay on the server and are never
+          sent to your browser. No system is completely secure, and we cannot
+          promise that it is.
+        </p>
+      </LegalSection>
 
-            <section>
-              <h2 className="mb-3 text-base font-semibold text-foreground">
-                4. Data Storage and Security
-              </h2>
-              <p>
-                Your data is stored securely in our backend systems and is
-                associated with your authenticated account. We use
-                industry-standard encryption in transit (HTTPS) and at rest. API
-                keys and secrets are never exposed to the client. While we take
-                reasonable precautions, no system is completely secure and we
-                cannot guarantee absolute security.
-              </p>
-            </section>
+      <LegalSection title="6. Cookies and analytics">
+        <p>
+          We set the cookies needed to keep you signed in and to remember
+          light or dark mode. Our analytics tool (Umami, self-hosted) counts
+          visits without cookies and without following you across sites. There
+          are no advertising cookies.
+        </p>
+      </LegalSection>
 
-            <section>
-              <h2 className="mb-3 text-base font-semibold text-foreground">
-                5. Third-Party Services
-              </h2>
-              <p className="mb-3">
-                FitFusion uses the following third-party services:
-              </p>
-              <ul className="list-disc space-y-2 pl-5">
-                <li>
-                  <strong className="text-foreground">Better Auth</strong> — a
-                  self-hosted authentication system used for sign-in and user
-                  management. Authentication data is stored in our own database.
-                </li>
-                <li>
-                  <strong className="text-foreground">Google</strong> — optional
-                  sign-in via your Google account. See{" "}
-                  <a
-                    href="https://policies.google.com/privacy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary underline underline-offset-4 hover:opacity-80"
-                  >
-                    Google&apos;s Privacy Policy
-                  </a>
-                  .
-                </li>
-                <li>
-                  <strong className="text-foreground">n8n</strong> — for AI
-                  workflow processing of fitness plan generation requests.
-                </li>
-              </ul>
-            </section>
+      <LegalSection title="7. Your rights">
+        <p>
+          Depending on where you live, you can ask to see the data we hold
+          about you, correct it, delete your account and its data, or object to
+          how we use it. Use the <a href="/contact">contact form</a> and say
+          which one. Deleting a plan from your dashboard removes that plan
+          straight away.
+        </p>
+      </LegalSection>
 
-            <section>
-              <h2 className="mb-3 text-base font-semibold text-foreground">
-                6. Your Rights
-              </h2>
-              <p className="mb-3">
-                Depending on your jurisdiction, you may have the right to:
-              </p>
-              <ul className="list-disc space-y-2 pl-5">
-                <li>Access the personal data we hold about you.</li>
-                <li>Request correction of inaccurate data.</li>
-                <li>
-                  Request deletion of your account and associated data.
-                </li>
-                <li>Object to or restrict certain processing activities.</li>
-              </ul>
-              <p className="mt-3">
-                To exercise any of these rights, please contact us using the
-                  Contact form in the footer.
-              </p>
-            </section>
+      <LegalSection title="8. Changes">
+        <p>
+          If this policy changes, the effective date above changes with it.
+        </p>
+      </LegalSection>
 
-            <section>
-              <h2 className="mb-3 text-base font-semibold text-foreground">
-                7. Cookies
-              </h2>
-              <p>
-                FitFusion uses session cookies required for authentication and
-                maintaining your logged-in state. We do not use tracking or
-                advertising cookies.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="mb-3 text-base font-semibold text-foreground">
-                8. Changes to This Policy
-              </h2>
-              <p>
-                We may update this Privacy Policy from time to time. When we do,
-                we will revise the effective date at the top of this page. We
-                encourage you to review this policy periodically.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="mb-3 text-base font-semibold text-foreground">
-                9. Contact
-              </h2>
-              <p>
-                If you have questions about this Privacy Policy or how we handle
-                your data, please reach out via the Contact form in the footer.
-              </p>
-            </section>
-          </div>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+      <LegalSection title="9. Contact">
+        <p>
+          Questions about this policy: use the <a href="/contact">contact form</a>.
+        </p>
+      </LegalSection>
+    </LegalPage>
   );
 }

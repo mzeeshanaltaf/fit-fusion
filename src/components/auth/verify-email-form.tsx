@@ -8,7 +8,7 @@ import { emailOtp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { EmailDeliveryNote, OtpField } from "@/components/auth/otp-field";
 import { useCooldown } from "@/hooks/use-cooldown";
-import { Dumbbell, Loader2 } from "lucide-react";
+import { AuthShell, authLinkClass } from "@/components/auth/auth-shell";
 
 export function VerifyEmailForm() {
   const router = useRouter();
@@ -72,20 +72,23 @@ export function VerifyEmailForm() {
   if (!email) return null;
 
   return (
-    <div className="w-full max-w-sm">
-      <Link href="/" className="mb-8 flex items-center justify-center gap-2">
-        <Dumbbell className="h-6 w-6 text-primary" />
-        <span className="text-lg font-bold tracking-tight">FitFusion</span>
-      </Link>
-
-      <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Verify your email</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+    <AuthShell
+      title="Verify your email"
+      description={
+        <>
           We sent a 6-digit code to{" "}
-          <span className="font-medium break-all text-foreground">{email}</span>.
-        </p>
-      </div>
-
+          <span className="font-semibold break-all text-foreground">{email}</span>.
+        </>
+      }
+      footer={
+        <>
+          Wrong email?{" "}
+          <Link href="/sign-up" className={authLinkClass}>
+            Start over
+          </Link>
+        </>
+      }
+    >
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -103,24 +106,24 @@ export function VerifyEmailForm() {
 
         <Button
           type="submit"
-          className="w-full gap-2"
-          disabled={verifying || otp.length !== 6}
+          size="lg"
+          className="w-full"
+          loading={verifying}
+          disabled={otp.length !== 6}
         >
-          {verifying && <Loader2 className="h-4 w-4 animate-spin" />}
           Verify email
         </Button>
       </form>
 
-      <div className="mt-4 text-center">
+      <div className="mt-4">
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={handleResend}
-          disabled={resending || cooldown.active}
-          className="gap-2"
+          loading={resending}
+          disabled={cooldown.active}
         >
-          {resending && <Loader2 className="h-4 w-4 animate-spin" />}
           {cooldown.active
             ? `Resend code in ${cooldown.remaining}s`
             : "Resend code"}
@@ -130,16 +133,6 @@ export function VerifyEmailForm() {
       <div className="mt-4">
         <EmailDeliveryNote />
       </div>
-
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        Wrong email?{" "}
-        <Link
-          href="/sign-up"
-          className="font-medium text-foreground hover:underline"
-        >
-          Start over
-        </Link>
-      </p>
-    </div>
+    </AuthShell>
   );
 }

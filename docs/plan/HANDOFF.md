@@ -10,7 +10,7 @@ Every session reads this file first and updates it last. Keep entries factual: r
 | 2 Generation core | **done** (real run used 5 real library rows, not the live library: see Open issues) | `feat(backend): generation core` (see `git log`) | 2026-11-11 |
 | 3 Backend features | **done** (also closes the Phase 2 full-library run: see Open issues) | `feat(backend): profile, edits, pdf, logs, analytics` (see `git log`) | 2026-11-11 |
 | 4 Design system | **done** (brief confirmed implicitly per the phase file; no adjustments) | `feat(design): design system` (see `git log`) | 2026-11-11 |
-| 5 Marketing redesign | not started | | |
+| 5 Marketing redesign | **done** | `feat(marketing): landing, about, contact, legal and auth redesign` (see `git log`) | 2026-11-11 |
 | 6 Dashboard + API wiring | not started | | |
 | 7 Deployment + verification | not started | | |
 
@@ -273,10 +273,23 @@ Every session reads this file first and updates it last. Keep entries factual: r
   - The backend PDF template can adopt the token values above (Archivo is still not installed in the image).
 
 ### Phase 5
-- Built:
-- Deviations:
-- Verify with:
-- Next phase needs:
+- **Built** (all under `src/`):
+  - New in `components/marketing/`: `wordmark.tsx` (FIT + FUSION, the only logo), `assemble-headline.tsx` (CSS word-by-word headline assembly, server component), `scroll-width.tsx` (client; drives the registered `--wdth` from scroll via rAF, no state), `ticker.tsx` (CSS loop of 20 real exercise names), `hero-plan.tsx`, `plan-sequence.tsx` (client; scroll-driven profile -> targets -> plan sheet), `library-numbers.tsx`, `nutrition-day.tsx`, `sample-data.ts`, `legal.tsx` (`LegalPage`, `LegalSection`). Rewritten: `navbar.tsx` (4 links, "Start free", mobile `Sheet` menu), `footer.tsx` (now a server component).
+  - New `components/auth/auth-shell.tsx` (`AuthShell`, `authLinkClass`): shared frame for the four auth screens. `auth-form`, `verify-email-form`, `forgot-password-form`, `otp-field` restyled; logic, redirects and the `<Suspense>` in `verify-email/page.tsx` unchanged. `user-menu.tsx` trigger lost its `rounded-full`.
+  - Pages: `(marketing)/page.tsx` (hero + live sample plan, ticker, `#how-it-works` sequence, `#library` numbers, nutrition table, full-vermilion CTA "10 free plans when you sign up"), `about`, `contact` (+ `contact-form.tsx`, still `action="/api/contact" method="post"` + fetch + `hp_field`), `privacy`, `terms`. `(auth)/layout.tsx` is now a plain chalk `<main>`; metadata stays `noindex` per page.
+  - `globals.css`: marketing motion block (`.assemble-word`, `.ticker-track`, `.row-in`, `[data-armed] [data-at]`) with reduced-motion rules.
+  - SEO/icons: root `layout.tsx` title/description/keywords rewritten (no "AI-powered"; template is now `%s | FitFusion`); `icon.tsx`, `apple-icon.tsx`, `opengraph-image.tsx`, `twitter-image.tsx`, `manifest.ts` moved to vermilion `#c82700` / chalk `#f8f5f1`; `/contact` added to the sitemap. `public/fitfusion_hero_bg.png` deleted. Pricing section, tiers and `#pricing` links are gone.
+- **Claims verified** (live DB `fit_fusion`, read-only counts run 2026-11-11): 250 workouts (`workout_details`, `deleted_at IS NULL`), 529 demo videos (`exercise_videos`), 5 distinct goals. 29 equipment types = canonical vocabulary (Phase 3 handoff, `GET /v1/library/equipment`). "About 30 seconds" = measured 28-30 s per plan (Phase 3 real run). "10 free" = `SIGNUP_CREDITS` default. Sample workout, exercises, sets/reps/rest, durations are real library rows from `docs/Webhooks.txt` (fat_loss, intermediate). The sample profile and the 2,050 / 164 / 220 / 57 targets are from the real Phase 2 generation. Breakfast text is from that run; **lunch, dinner and snack wording is written by hand** to match the run's per-meal macros (labelled "Sample day"). Calculation claims on `/about` (Mifflin-St Jeor, activity from days, allergen scan, ids checked against the library) match `backend/app/services/`.
+- **Deviations / decisions:**
+  - Legal pages were rewritten to the post-launch state and **will be inaccurate until Phase 6/7 ship**: they say 10 free credits (production n8n still grants 5), plan generation by OpenAI (production still uses n8n), and a failed plan is refunded. Effective date set to 2026-11-11. Review the legal text before launch; I am not a lawyer.
+  - The landing page does not mention swap, regenerate, PDF or workout logging (not in the UI until Phase 6). Add a line once they ship.
+  - The 4th sample "week" in `plan-sequence` lists four real fat_loss/intermediate workouts; the real run's four were not recorded by name.
+  - `Footer` year uses `new Date().getFullYear()` (server component now, no hydration issue).
+  - Terms/privacy links use `<a href="/contact">`; swap to `next/link` if desired.
+- **Verify with:** `npm run build` passes. Screenshots (landing at 8 scroll stops, about, contact, sign-in, sign-up, verify-email, forgot-password, privacy; phone 390, tablet 820, desktop 1440; light and dark) were taken with headless Chrome through playwright-core; **no horizontal overflow and no console errors on any of the 48 page/size/theme combinations**. They live only in the session scratchpad (`.../scratchpad/shots`), not committed. Keyboard: tab order is logical on landing and contact, every focus stop shows the 2px ring, the mobile menu opens by Enter and puts focus in the dialog. Reduced motion (emulated): sequence is untall and fully filled (`data-armed` never set), ticker static and wrapped, headline words at full opacity. JS disabled: contact form native POST returned **303** to `/contact?sent=1`. Grep for `pricing|emerald|powered by AI|Join thousands|fitfusion_hero_bg` in marketing, auth, contact and `src/app/*.ts*` is clean. Pitfall met while testing: a stale `next start` left running after a rebuild serves 500s for chunks and leaves the page un-hydrated (dead buttons); kill the old process before restarting.
+- **Critique-and-fix pass (impeccable lens: hierarchy, density, motion, a11y) changed:** scroll-width headlines were relaxing to wdth 90-96 and read as wide bold rather than condensed, now capped at 80; profile and targets grids on tablet collided ("IntermediatePescatarian", "kcal164"), now two-up until `xl`; hero is one display (`YOUR PLAN.`) with a single vermilion word instead of a badge; the three-card feature row, icon tiles, gradients, blur navbar and the stock photo are all removed; auth errors keep toasts (behaviour unchanged) but the contact form now uses `Alert`/`Field`.
+- **Outstanding polish:** (1) the sticky sequence is 320vh on md+ and its sheet needs about 560 px of viewport height; on very short laptop windows (under about 650 px high) it will clip, so consider disabling stickiness below that height. (2) Navbar auth buttons appear after the session resolves (a small pop-in). (3) OG images use the default Satori sans, not Archivo. (4) Auth errors still come only as toasts; Phase 6 may want inline `FieldError`s. (5) No real device test of the scroll sequence on touch.
+- **Next phase needs:** reuse `Wordmark` for the dashboard shell, `AuthShell` is auth-only. `Credits` page still has emerald classes (Phase 6). Remove the n8n signup-credits hook as already planned, or new users get 5 credits while the pages say 10. `.env`/API contracts untouched.
 
 ### Phase 6
 - Built:

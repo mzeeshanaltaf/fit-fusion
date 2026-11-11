@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, Loader2, Send } from "lucide-react";
+import { SendIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Field, FieldHint, FieldLabel } from "@/components/ui/field";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -37,7 +38,7 @@ export function ContactForm({ initialSuccess = false, initialError }: Props) {
 
     if (!name.trim() || !email.trim() || !message.trim()) {
       setStatus("error");
-      setErrorMsg("Please fill in all fields.");
+      setErrorMsg("Fill in your name, email and message, then send again.");
       return;
     }
 
@@ -53,41 +54,41 @@ export function ContactForm({ initialSuccess = false, initialError }: Props) {
         setStatus("success");
       } else {
         setStatus("error");
-        setErrorMsg(data.message ?? "Something went wrong. Please try again.");
+        setErrorMsg(data.message ?? "Something went wrong. Try again.");
       }
     } catch {
       setStatus("error");
-      setErrorMsg("Failed to send. Check your connection and try again.");
+      setErrorMsg("Sending failed. Check your connection and try again.");
     }
   };
 
   if (status === "success") {
     return (
-      <div className="flex flex-col items-center gap-4 py-8 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-          <CheckCircle className="h-7 w-7 text-primary" />
-        </div>
+      <div className="grid gap-5">
+        <Alert variant="success">
+          <AlertTitle>Message sent</AlertTitle>
+          <AlertDescription>
+            Thanks. If it needs a reply, it goes to the email you gave.
+          </AlertDescription>
+        </Alert>
         <div>
-          <p className="font-semibold">Message sent!</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Thank you for your message. We will get back to you as soon as
-            possible.
-          </p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setName("");
+              setEmail("");
+              setMessage("");
+              setStatus("idle");
+            }}
+          >
+            Send another
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => {
-            setName("");
-            setEmail("");
-            setMessage("");
-            setStatus("idle");
-          }}
-        >
-          Send another
-        </Button>
       </div>
     );
   }
+
+  const over = message.length >= MESSAGE_MAX;
 
   return (
     <form
@@ -95,7 +96,7 @@ export function ContactForm({ initialSuccess = false, initialError }: Props) {
       method="post"
       onSubmit={handleSubmit}
       noValidate
-      className="space-y-4"
+      className="grid gap-5"
     >
       {/* Honeypot: visually hidden, off the a11y tree, off the tab order, and
           autocomplete disabled. Real users never see or fill it; bots that
@@ -116,83 +117,74 @@ export function ContactForm({ initialSuccess = false, initialError }: Props) {
         />
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="name">Name</Label>
+      <Field>
+        <FieldLabel htmlFor="name">Name</FieldLabel>
         <Input
           id="name"
           name="name"
           type="text"
           required
           autoComplete="name"
-          placeholder="Your name"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-      </div>
+      </Field>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="email">Email</Label>
+      <Field>
+        <FieldLabel htmlFor="email">Email</FieldLabel>
         <Input
           id="email"
           name="email"
           type="email"
           required
           autoComplete="email"
-          placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-      </div>
+      </Field>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="message">
-          Message{" "}
-          <span
-            className={`text-xs ${
-              message.length > MESSAGE_MAX
-                ? "text-destructive"
-                : "text-muted-foreground"
-            }`}
-          >
-            ({message.length}/{MESSAGE_MAX})
-          </span>
-        </Label>
+      <Field>
+        <FieldLabel htmlFor="message">Message</FieldLabel>
         <Textarea
           id="message"
           name="message"
           required
-          rows={6}
+          rows={7}
           maxLength={MESSAGE_MAX}
-          placeholder="Write your message here…"
+          aria-describedby="message-count"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           className="resize-y"
         />
-      </div>
+        <FieldHint id="message-count" className={over ? "font-semibold text-foreground" : undefined}>
+          <span className="t-num">{message.length}</span> of {MESSAGE_MAX.toLocaleString("en-US")} characters
+        </FieldHint>
+      </Field>
 
       {status === "error" && (
-        <p className="rounded-lg border border-destructive/20 bg-destructive/5 px-3.5 py-2.5 text-sm text-destructive">
-          {errorMsg}
-        </p>
+        <Alert variant="destructive">
+          <AlertTitle>Message not sent</AlertTitle>
+          <AlertDescription>{errorMsg}</AlertDescription>
+        </Alert>
       )}
 
-      <Button
-        type="submit"
-        disabled={status === "loading"}
-        className="w-full gap-2"
-      >
-        {status === "loading" ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Sending…
-          </>
-        ) : (
-          <>
-            <Send className="h-4 w-4" />
-            Send Message
-          </>
-        )}
-      </Button>
+      <div>
+        <Button
+          type="submit"
+          size="lg"
+          loading={status === "loading"}
+          className="w-full sm:w-auto"
+        >
+          {status === "loading" ? (
+            "Sending"
+          ) : (
+            <>
+              <SendIcon />
+              Send message
+            </>
+          )}
+        </Button>
+      </div>
     </form>
   );
 }

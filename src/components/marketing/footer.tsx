@@ -1,56 +1,67 @@
-"use client";
-
 import Link from "next/link";
-import { Dumbbell } from "lucide-react";
+import { Wordmark } from "@/components/marketing/wordmark";
+
+const COLUMNS = [
+  {
+    title: "Product",
+    links: [
+      { href: "/#how-it-works", label: "How it works" },
+      { href: "/#library", label: "Library" },
+      { href: "/sign-up", label: "Start free" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { href: "/about", label: "About" },
+      { href: "/contact", label: "Contact" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { href: "/privacy", label: "Privacy" },
+      { href: "/terms", label: "Terms" },
+    ],
+  },
+];
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/40 bg-background">
-      <div className="container mx-auto max-w-6xl px-4 py-12">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="flex items-center gap-2">
-              <Dumbbell className="h-5 w-5 text-primary" />
-              <span className="font-bold">FitFusion</span>
-            </Link>
-            <p className="mt-2 text-sm text-muted-foreground">
-              AI-powered fitness plan generation for every body and every goal.
+    <footer className="border-t-2 border-foreground bg-background">
+      <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
+        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+          <div>
+            <Wordmark className="text-3xl" />
+            <p className="t-small mt-3 max-w-xs text-muted-foreground">
+              A workout plan and 5 days of meals, built for your profile in
+              about 30 seconds.
             </p>
           </div>
 
-          {/* Product */}
-          <div>
-            <h4 className="mb-3 text-sm font-semibold">Product</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/#features" className="hover:text-foreground transition-colors">Features</Link></li>
-              <li><Link href="/#pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
-              <li><Link href="/#how-it-works" className="hover:text-foreground transition-colors">How it works</Link></li>
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h4 className="mb-3 text-sm font-semibold">Company</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/about" className="hover:text-foreground transition-colors">About</Link></li>
-              <li><Link href="/contact" className="hover:text-foreground transition-colors">Contact Us</Link></li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h4 className="mb-3 text-sm font-semibold">Legal</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link></li>
-              <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link></li>
-            </ul>
-          </div>
+          {COLUMNS.map((col) => (
+            <nav key={col.title} aria-label={col.title}>
+              <h2 className="t-label mb-3 text-muted-foreground">{col.title}</h2>
+              <ul className="grid gap-1">
+                {col.links.map((l) => (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      className="inline-flex min-h-8 items-center text-sm font-medium underline-offset-4 hover:underline"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
         </div>
 
-        <div className="mt-10 border-t border-border/40 pt-6 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} FitFusion. All rights reserved.
-        </div>
+        <p className="t-small mt-12 border-t border-border pt-6 text-muted-foreground">
+          © {new Date().getFullYear()} FitFusion. Plans are general wellness
+          information, not medical advice.
+        </p>
       </div>
     </footer>
   );

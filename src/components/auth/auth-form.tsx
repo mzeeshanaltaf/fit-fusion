@@ -7,8 +7,8 @@ import { toast } from "sonner";
 import { signIn, signUp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dumbbell, Loader2 } from "lucide-react";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { AuthShell, authLinkClass } from "@/components/auth/auth-shell";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -86,87 +86,91 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
     try {
       await signIn.social({ provider: "google", callbackURL: "/dashboard" });
     } catch {
-      toast.error("Could not start Google sign-in. Please try again.");
+      toast.error("Could not start Google sign-in. Try again.");
       setGoogleLoading(false);
     }
   }
 
   return (
-    <div className="w-full max-w-sm">
-      <Link href="/" className="mb-8 flex items-center justify-center gap-2">
-        <Dumbbell className="h-6 w-6 text-primary" />
-        <span className="text-lg font-bold tracking-tight">FitFusion</span>
-      </Link>
-
-      <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">
-          {isSignUp ? "Create your account" : "Welcome back"}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {isSignUp
-            ? "Start generating personalized fitness plans."
-            : "Sign in to continue to your dashboard."}
-        </p>
-      </div>
-
+    <AuthShell
+      title={isSignUp ? "Create your account" : "Sign in"}
+      description={
+        isSignUp
+          ? "10 free plans. Verify your email and you are in."
+          : "Back to your plans."
+      }
+      footer={
+        isSignUp ? (
+          <>
+            Already have an account?{" "}
+            <Link href="/sign-in" className={authLinkClass}>
+              Sign in
+            </Link>
+          </>
+        ) : (
+          <>
+            New here?{" "}
+            <Link href="/sign-up" className={authLinkClass}>
+              Create an account
+            </Link>
+          </>
+        )
+      }
+    >
       <Button
         type="button"
         variant="outline"
-        className="w-full gap-2"
+        size="lg"
+        className="w-full"
         onClick={handleGoogle}
-        disabled={googleLoading || loading}
+        loading={googleLoading}
+        disabled={loading}
       >
-        {googleLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <GoogleIcon />
-        )}
+        {!googleLoading && <GoogleIcon />}
         Continue with Google
       </Button>
 
-      <div className="my-5 flex items-center gap-3">
+      <div className="my-5 flex items-center gap-3" aria-hidden>
         <span className="h-px flex-1 bg-border" />
-        <span className="text-xs text-muted-foreground">or</span>
+        <span className="t-label text-muted-foreground">or</span>
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="grid gap-4">
         {isSignUp && (
-          <div className="space-y-1.5">
-            <Label htmlFor="name">Name</Label>
+          <Field>
+            <FieldLabel htmlFor="name">Name</FieldLabel>
             <Input
               id="name"
               name="name"
-              placeholder="Your name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="name"
               required
             />
-          </div>
+          </Field>
         )}
 
-        <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
+        <Field>
+          <FieldLabel htmlFor="email">Email</FieldLabel>
           <Input
             id="email"
             name="email"
             type="email"
-            placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
             required
           />
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+        <Field>
+          <div className="flex items-center justify-between gap-3">
+            <FieldLabel htmlFor="password">Password</FieldLabel>
             {!isSignUp && (
               <Link
                 href="/forgot-password"
-                className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                className="t-small font-semibold underline underline-offset-4 hover:decoration-2"
               >
                 Forgot password?
               </Link>
@@ -176,38 +180,24 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
             id="password"
             name="password"
             type="password"
-            placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete={isSignUp ? "new-password" : "current-password"}
             minLength={8}
+            aria-describedby={isSignUp ? "password-hint" : undefined}
             required
           />
-        </div>
+          {isSignUp && (
+            <p id="password-hint" className="t-small text-muted-foreground">
+              At least 8 characters.
+            </p>
+          )}
+        </Field>
 
-        <Button type="submit" className="w-full gap-2" disabled={loading}>
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+        <Button type="submit" size="lg" className="w-full" loading={loading} disabled={googleLoading}>
           {isSignUp ? "Create account" : "Sign in"}
         </Button>
       </form>
-
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        {isSignUp ? (
-          <>
-            Already have an account?{" "}
-            <Link href="/sign-in" className="font-medium text-foreground hover:underline">
-              Sign in
-            </Link>
-          </>
-        ) : (
-          <>
-            Don&apos;t have an account?{" "}
-            <Link href="/sign-up" className="font-medium text-foreground hover:underline">
-              Get started
-            </Link>
-          </>
-        )}
-      </p>
-    </div>
+    </AuthShell>
   );
 }

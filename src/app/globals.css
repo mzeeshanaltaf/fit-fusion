@@ -412,6 +412,95 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* Marketing motion (brand pages only). Every effect has a still       */
+/* alternative under prefers-reduced-motion below.                     */
+/* ------------------------------------------------------------------ */
+
+@keyframes assemble-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.35em);
+    --wdth: 125;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    --wdth: 62;
+  }
+}
+
+/* Headline assembly: each word rises and tightens from wide to condensed. */
+.assemble-word {
+  display: inline-block;
+  animation: assemble-in var(--dur-reveal) var(--ease-out-expo) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+  font-variation-settings: "wdth" var(--wdth);
+}
+
+@keyframes ticker-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 60s linear infinite;
+}
+
+.ticker:hover .ticker-track,
+.ticker:focus-within .ticker-track {
+  animation-play-state: paused;
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.row-in {
+  animation: row-in var(--dur-reveal) var(--ease-out-quart) both;
+  animation-delay: calc(400ms + var(--i, 0) * 110ms);
+}
+
+/* Scroll-driven sequence: dimmed until reached (only once JS has armed it). */
+[data-armed] [data-at] {
+  opacity: 0.16;
+  transition: opacity var(--dur-slow) var(--ease-out-quart);
+}
+
+[data-armed] [data-at][data-on] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assemble-word,
+  .row-in {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Ticker stops and shows the first set as a static, wrapping list. */
+  .ticker-track {
+    animation: none !important;
+    width: auto;
+    flex-wrap: wrap;
+  }
+
+  .ticker-dup {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Base                                                                */
 /* ------------------------------------------------------------------ */
 

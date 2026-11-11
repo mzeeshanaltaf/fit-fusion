@@ -20,17 +20,17 @@ const archivo = Archivo({
 export const metadata: Metadata = {
   metadataBase: new URL("https://fitfusion.zeeshanai.cloud"),
   title: {
-    default: "FitFusion — AI-Powered Fitness Plans Tailored to You",
-    template: "%s — FitFusion",
+    default: "FitFusion | Workout and meal plans built from your profile",
+    template: "%s | FitFusion",
   },
   description:
-    "Generate personalized workout and nutrition plans powered by AI. Enter your profile, pick a goal, and get a complete fitness plan in seconds.",
+    "Enter your profile and get a workout plan picked from 250 real workouts, plus 5 days of meals built around your calorie target. 10 free plans when you sign up.",
   keywords: [
-    "AI fitness plan",
-    "personalized workout",
-    "AI nutrition plan",
-    "fitness app",
-    "AI personal trainer",
+    "workout plan generator",
+    "personalized workout plan",
+    "meal plan with macros",
+    "fitness plan",
+    "free workout plan",
   ],
   authors: [{ name: "FitFusion" }],
   creator: "FitFusion",
@@ -40,17 +40,17 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     siteName: "FitFusion",
-    title: "FitFusion — AI-Powered Fitness Plans Tailored to You",
+    title: "FitFusion | Workout and meal plans built from your profile",
     description:
-      "Generate personalized workout and nutrition plans powered by AI. Enter your profile, pick a goal, and get a complete fitness plan in seconds.",
+      "Enter your profile and get a workout plan picked from 250 real workouts, plus 5 days of meals built around your calorie target. 10 free plans when you sign up.",
     images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "FitFusion — AI-Powered Fitness Plans Tailored to You",
+    title: "FitFusion | Workout and meal plans built from your profile",
     description:
-      "Generate personalized workout and nutrition plans powered by AI. Enter your profile, pick a goal, and get a complete fitness plan in seconds.",
+      "Enter your profile and get a workout plan picked from 250 real workouts, plus 5 days of meals built around your calorie target. 10 free plans when you sign up.",
     images: ["/opengraph-image"],
   },
   robots: {

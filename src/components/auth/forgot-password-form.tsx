@@ -7,10 +7,10 @@ import { toast } from "sonner";
 import { emailOtp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { EmailDeliveryNote, OtpField } from "@/components/auth/otp-field";
+import { AuthShell, authLinkClass } from "@/components/auth/auth-shell";
 import { useCooldown } from "@/hooks/use-cooldown";
-import { Dumbbell, Loader2 } from "lucide-react";
 
 export function ForgotPasswordForm() {
   const router = useRouter();
@@ -100,54 +100,51 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <div className="w-full max-w-sm">
-      <Link href="/" className="mb-8 flex items-center justify-center gap-2">
-        <Dumbbell className="h-6 w-6 text-primary" />
-        <span className="text-lg font-bold tracking-tight">FitFusion</span>
-      </Link>
-
-      <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">
-          {step === "request" ? "Forgot your password?" : "Choose a new password"}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {step === "request" ? (
-            "Enter your email and we'll send you a 6-digit reset code."
-          ) : (
-            <>
-              Enter the code we sent to{" "}
-              <span className="font-medium break-all text-foreground">
-                {email}
-              </span>
-              .
-            </>
-          )}
-        </p>
-      </div>
-
+    <AuthShell
+      title={step === "request" ? "Reset password" : "New password"}
+      description={
+        step === "request" ? (
+          "Enter your email. If an account exists, we send a 6-digit code."
+        ) : (
+          <>
+            Enter the code sent to{" "}
+            <span className="font-semibold break-all text-foreground">
+              {email}
+            </span>
+            , then choose a new password.
+          </>
+        )
+      }
+      footer={
+        <>
+          Remembered it?{" "}
+          <Link href="/sign-in" className={authLinkClass}>
+            Back to sign in
+          </Link>
+        </>
+      }
+    >
       {step === "request" ? (
-        <form onSubmit={handleRequest} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
+        <form onSubmit={handleRequest} className="grid gap-4">
+          <Field>
+            <FieldLabel htmlFor="email">Email</FieldLabel>
             <Input
               id="email"
               name="email"
               type="email"
-              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               required
             />
-          </div>
+          </Field>
 
-          <Button type="submit" className="w-full gap-2" disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          <Button type="submit" size="lg" className="w-full" loading={loading}>
             Send reset code
           </Button>
         </form>
       ) : (
-        <form onSubmit={handleReset} className="space-y-4">
+        <form onSubmit={handleReset} className="grid gap-4">
           <OtpField
             value={otp}
             onChange={setOtp}
@@ -155,51 +152,47 @@ export function ForgotPasswordForm() {
             autoFocus
           />
 
-          <div className="space-y-1.5">
-            <Label htmlFor="new-password">New password</Label>
+          <Field>
+            <FieldLabel htmlFor="new-password">New password</FieldLabel>
             <Input
               id="new-password"
               name="new-password"
               type="password"
-              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
               minLength={8}
               required
             />
-          </div>
+          </Field>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="confirm-password">Confirm new password</Label>
+          <Field>
+            <FieldLabel htmlFor="confirm-password">Confirm new password</FieldLabel>
             <Input
               id="confirm-password"
               name="confirm-password"
               type="password"
-              placeholder="••••••••"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               autoComplete="new-password"
               minLength={8}
               required
             />
-          </div>
+          </Field>
 
-          <Button type="submit" className="w-full gap-2" disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          <Button type="submit" size="lg" className="w-full" loading={loading}>
             Reset password
           </Button>
 
-          <div className="text-center">
+          <div>
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={handleResend}
-              disabled={resending || cooldown.active}
-              className="gap-2"
+              loading={resending}
+              disabled={cooldown.active}
             >
-              {resending && <Loader2 className="h-4 w-4 animate-spin" />}
               {cooldown.active
                 ? `Resend code in ${cooldown.remaining}s`
                 : "Resend code"}
@@ -209,16 +202,6 @@ export function ForgotPasswordForm() {
           <EmailDeliveryNote />
         </form>
       )}
-
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        Remembered it?{" "}
-        <Link
-          href="/sign-in"
-          className="font-medium text-foreground hover:underline"
-        >
-          Back to sign in
-        </Link>
-      </p>
-    </div>
+    </AuthShell>
   );
 }

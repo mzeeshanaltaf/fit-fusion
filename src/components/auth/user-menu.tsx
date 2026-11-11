@@ -41,7 +41,7 @@ export function UserMenu({ user }: { user: UserMenuUser }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <DropdownMenuTrigger className="rounded-md">
         <Avatar className="h-8 w-8 cursor-pointer">
           {user.image ? (
             <AvatarImage src={user.image} alt={user.name ?? "User"} />
