@@ -39,3 +39,20 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# n8n workflow exports
+/n8n_workflows/
+
+# screenshots
+/screenshots/
+
+# python virtual environment
+/backend/.venv/
+
+# backend: the env example is tracked; DB cleanup backups contain user data, never commit
+!.env.example
+/backend/backups/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/

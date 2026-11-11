@@ -69,6 +69,11 @@ Auth `session.user.id`) is the join key for all user data in the n8n/Postgres ba
   - `requestPasswordReset` returns success for unknown emails by design (anti-enumeration),
     so keep the UI copy neutral.
   - Preflight: `node ~/.claude/skills/better-auth-email-otp/scripts/preflight.mjs --app-dir src/app`
+- **`jwt` plugin** (for the FastAPI backend in `backend/`, see its README and
+  `docs/plan/`): `/api/auth/token` issues a 15-min EdDSA JWT (`sub` = user id,
+  `email_verified`; issuer = audience = `BETTER_AUTH_URL`), `/api/auth/jwks` publishes
+  the keys. Needs the `jwks` table (already created by the CLI migration). The backend
+  is not wired into the UI yet.
 - Signup credits: a `databaseHooks.user.create.after` hook calls the n8n credits
   webhook (`signup_credits`) — this replaced the old Clerk webhook.
 - **Protection:** [src/middleware.ts](src/middleware.ts) guards `/dashboard/:path*` with

@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { emailOTP } from "better-auth/plugins";
+import { emailOTP, jwt } from "better-auth/plugins";
 import { Pool } from "pg";
 import { callN8nWebhook } from "@/lib/n8n";
 import { N8N_WEBHOOKS } from "@/lib/constants";
@@ -44,6 +44,26 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    // Issues short-lived JWTs for the FastAPI backend (GET /api/auth/token) and
+    // publishes the public keys at GET /api/auth/jwks. Needs the `jwks` table
+    // (run the Better Auth CLI migration). The backend verifies signature,
+    // issuer, audience and expiry; `sub` is the user id.
+    jwt({
+      jwt: {
+        // Set explicitly: the plugin's default only works when `baseURL` is
+        // passed in the options object, and we rely on BETTER_AUTH_URL instead.
+        // Must match JWT_ISSUER / JWT_AUDIENCE in backend/.env.
+        issuer: process.env.BETTER_AUTH_URL,
+        audience: process.env.BETTER_AUTH_URL,
+        expirationTime: "15m",
+        // Keep the token small and free of PII: by default the whole user
+        // record (name, email, image) would be embedded. `sub` is added by the
+        // plugin. The backend only grants signup credits to verified users.
+        definePayload: ({ user }) => ({
+          email_verified: user.emailVerified,
+        }),
+      },
+    }),
     emailOTP({
       // Replaces Better Auth's link-based verification email with the OTP
       // sender, so sign-up and unverified sign-in both emit a 6-digit code.

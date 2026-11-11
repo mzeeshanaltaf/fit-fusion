@@ -1,0 +1,72 @@
+# FitFusion API
+
+FastAPI backend (Python 3.12, uv). Phase 1 state: `/health`, JWT verification, models and
+migrations. Business endpoints arrive in later phases. Plan: `../docs/plan/`.
+
+## Run
+
+```bash
+cd backend
+cp .env.example .env          # then edit DATABASE_URL etc.
+uv sync
+uv run uvicorn app.main:create_app --factory --reload --port 8000
+```
+
+- `GET /health` is public and checks the database (503 when it is unreachable).
+- `GET /v1/whoami` needs `Authorization: Bearer <token>`. It is a diagnostic that proves a
+  Better Auth token is accepted. Get a token from the Next.js app: `GET /api/auth/token`
+  with a signed-in session cookie.
+
+## Test and lint
+
+```bash
+uv run pytest            # unit tests; DB-backed tests are skipped
+uv run ruff check . && uv run ruff format --check .
+```
+
+DB-backed tests run only when `TEST_DATABASE_URL` points at a migrated, **disposable**
+database (never the live one). Throwaway Postgres with a copy of the live schema:
+
+```bash
+docker run -d --name fitfusion-test-postgres -e POSTGRES_PASSWORD=test \
+  -e POSTGRES_DB=fitfusion_test -p 127.0.0.1:5436:5432 postgres:17
+# schema-only dump of the live fit_fusion schema (no data), loaded into the container:
+docker run --rm -e DATABASE_URL postgres:17 sh -c \
+  'pg_dump --schema-only --no-owner --no-privileges -n fit_fusion "$DATABASE_URL"' \
+  | docker exec -i fitfusion-test-postgres psql -U postgres -d fitfusion_test -q
+export DATABASE_URL=postgresql://postgres:test@127.0.0.1:5436/fitfusion_test
+uv run alembic upgrade head
+TEST_DATABASE_URL=$DATABASE_URL uv run pytest
+```
+
+## Migrations (Alembic, `fit_fusion` schema only)
+
+```bash
+uv run alembic upgrade head      # 0001 fitness_plans, 0002 new tables, 0003 ledger types
+uv run alembic downgrade base    # exact inverse (verified by schema diff)
+uv run alembic current
+```
+
+Write migrations by hand. `alembic/env.py` hides the protected tables (`exercise_videos`,
+`workout_details`, `_backup` copies) and Better Auth's tables from autogenerate, but
+`alembic check` is noisy because the models are schema-qualified; do not use it as a gate.
+
+## One-off data cleanup
+
+`scripts/cleanup_dummy_data.py` deletes the dummy plans and resets the credit ledger.
+Dry run by default, writes a JSON backup to `backups/` (gitignored), and needs a typed
+confirmation. **Run against the live database only after the owner confirms.**
+
+```bash
+uv run python -m scripts.cleanup_dummy_data              # counts only
+uv run python -m scripts.cleanup_dummy_data --execute    # backup, confirm, delete
+```
+
+## Docker
+
+```bash
+docker build -t fitfusion-api backend
+docker run -p 8000:8000 --env-file backend/.env fitfusion-api
+```
+
+Migrations are not run on container start; apply them explicitly.
