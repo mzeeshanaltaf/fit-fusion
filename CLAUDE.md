@@ -119,7 +119,9 @@ Secrets live in `.env.local` (gitignored); see `.env.example` for the full list.
 - Server route handlers: import from `next/server`; validate required fields → 400;
   session-guard with `auth.api.getSession` → 401; wrap n8n calls in try/catch → 500.
 - Client components use `"use client"`; prefer shadcn `ui/` primitives; icons from
-  `lucide-react`; match the emerald/primary theme and existing spacing.
+  `lucide-react`; follow [DESIGN.md](DESIGN.md) (chalk / ink / vermilion, Archivo, flat and
+  ruled) and [PRODUCT.md](PRODUCT.md). Tokens live in `src/app/globals.css`; use semantic
+  tokens (`bg-card`, `text-muted-foreground`, `border-input`), never raw colours, and no `emerald-*`.
 - New n8n calls should go through `callN8nWebhook` + a constant in `constants.ts`.
 
 ## Deployment

@@ -9,7 +9,7 @@ Every session reads this file first and updates it last. Keep entries factual: r
 | 1 Backend foundation | **done** (cleanup run on live DB; Alembic migrations deferred to Phase 7 by the user) | `feat(backend): FastAPI foundation` (see `git log`) | 2026-11-11 |
 | 2 Generation core | **done** (real run used 5 real library rows, not the live library: see Open issues) | `feat(backend): generation core` (see `git log`) | 2026-11-11 |
 | 3 Backend features | **done** (also closes the Phase 2 full-library run: see Open issues) | `feat(backend): profile, edits, pdf, logs, analytics` (see `git log`) | 2026-11-11 |
-| 4 Design system | not started | | |
+| 4 Design system | **done** (brief confirmed implicitly per the phase file; no adjustments) | `feat(design): design system` (see `git log`) | 2026-11-11 |
 | 5 Marketing redesign | not started | | |
 | 6 Dashboard + API wiring | not started | | |
 | 7 Deployment + verification | not started | | |
@@ -116,7 +116,7 @@ Every session reads this file first and updates it last. Keep entries factual: r
   **Dates and timezones: the browser must send its own local calendar date.** The server never guesses a timezone. `performed_on` (POST/DELETE) and `today` (GET /progress) are plain dates from the user's clock; the server only checks they are plausible: `today` must be within 1 day of the UTC date (covers UTC-12..UTC+14), `performed_on` may be at most 1 day ahead of UTC and at most 365 days back (422 otherwise). Omitted, both default to the UTC date, which is wrong for users far from UTC around midnight, so always send them. Weeks run Monday-Sunday. `sessions` counts every logged workout (two on one day = 2); `active_days` counts days. `streak_days` = consecutive days with a session ending today, or yesterday if today has none yet (today not done does not break it). `streak_weeks` = consecutive weeks with at least one session ending this week, or last week if this week is empty so far. `target_days` = `days_per_week` of the newest plan (null without a plan). With 3 sessions a week `streak_days` is mostly 0-1, so show `streak_weeks` as the headline. Deleting a plan deletes its logs (FK cascade), so it also lowers the totals.
 
   **PDF notes:** A4, chalk paper / ink type / one vermilion accent (`#d9391b`; placeholder colours until Phase 4 fixes the tokens), 4 pages for a 4-day plan: header + targets + profile line, workouts (one table per workout, with a "Watch" link per exercise), nutrition page(s) with day totals, page numbers. Template `backend/app/templates/plan.html` (Jinja2, autoescaped; links only for `https` YouTube URLs). WeasyPrint is synchronous, so it runs in a thread. Font: `Archivo, DejaVu Sans`; Archivo is not installed, so the container renders DejaVu Sans (checked visually). Add Archivo to the image if the PDF should match the site.
-- **Design tokens file / DESIGN.md location:**
+- **Design tokens file / DESIGN.md location:** rules in `DESIGN.md` + `DESIGN.json` (repo root), product context in `PRODUCT.md` (repo root), values in `src/app/globals.css`. The PDF template's placeholder vermilion `#d9391b` can now be replaced with the real token, about `#c82700` (light, `oklch(0.54 0.2 33)`); chalk about `#f8f5f1`, ink about `#120f0c`.
 
 ## Open issues
 
@@ -139,6 +139,7 @@ Every session reads this file first and updates it last. Keep entries factual: r
 - [phase 2] `legacy_schema.sql` **assumes** the `workout_details` column types (`workout_id uuid`, `workout_category`/`fitness_goal`/`training_level` enums, `workout_detail jsonb`). The column names are the ones the n8n workflow selects, and `services/library.py` casts ids and enums to text, so it should work against the live table. If the live table differs (e.g. `fitness_goal` is an array), `library.load_candidates` is the one place to fix. — non-blocking, owner: Phase 7
 - [phase 2, resolved in phase 3 by `GET /v1/library/equipment`] **Phase 6 needs the equipment vocabulary for the form** and there is no endpoint for it (out of Phase 2 scope). The API validates against the `DISTINCT` values of every `equipment_needed` in the library, plus `bodyweight`. Suggest `GET /v1/library/equipment` in Phase 3, or hard-code from the live data. Because an empty `equipment` list means "no restriction", the form must make "bodyweight only" an explicit choice. — owner: Phase 3/6
 - [phase 2] **The n8n signup hook must be removed before launch (Phase 6).** It creates the user's credit account (5 credits) at sign-up, so the API's "no account row = never granted" check then finds an account and never grants `SIGNUP_CREDITS` (10). New users would silently get 5. The 2 existing users are unaffected (their rows were cleaned up). — blocking for launch, owner: Phase 6
+- [phase 4] Existing marketing/dashboard pages still use hard-coded Tailwind `emerald-*` classes (`src/app/(marketing)/page.tsx`, `about/page.tsx`, `src/app/(dashboard)/dashboard/credits/page.tsx`) and the app icons/OG images still use emerald `#059669`; tokens are emerald-free, pages are not. Non-blocking. — owner: Phase 5 (marketing, icons) / Phase 6 (credits)
 - [phase 2] Resolved: Phase 1's "credit accounts for the 2 real users are not created by anything yet". `ensure_signup_grant` now creates them on their first request from a verified user.
 
 ## Handoff notes
@@ -236,10 +237,40 @@ Every session reads this file first and updates it last. Keep entries factual: r
   - Phase 7: apply Alembic 0001-0004, set `ADMIN_API_KEY` and `EDIT_TIMEOUT_SECONDS` in Coolify, check the proxy timeout, re-run the real smoke test (the full-library run is already done).
 
 ### Phase 4
-- Built:
-- Deviations:
-- Verify with:
-- Next phase needs:
+- **Built:**
+  - `PRODUCT.md` (register `product`; the file maps marketing + auth to the brand register), `DESIGN.md` (Stitch six-section format; frontmatter tokens in OKLCH; motion, layout and screen recipes folded into Overview/Components), `DESIGN.json` (sidecar: tonal ramps, shadow + motion tokens, breakpoints, 10 component snippets, narrative). `node ~/.claude/skills/impeccable/scripts/load-context.mjs` loads both (`hasProduct`/`hasDesign` true).
+  - **Tokens** in `src/app/globals.css` (all OKLCH). Light is `:root`; dark is `.dark` (class on `<html>`, still driven by `next-themes`, unchanged). Emerald is gone from every token.
+    - Semantic names (shadcn-compatible, so old pages keep compiling): `background foreground card card-foreground popover popover-foreground primary primary-foreground secondary secondary-foreground muted muted-foreground accent accent-foreground destructive destructive-foreground border input ring chart-1..5 sidebar-*`.
+    - New: `primary-hover`, `signal` (vermilion as text/icon/rule), `signal-tint`, `success`, `warning`; Tailwind utilities `bg-signal-tint`, `text-signal`, `text-success`, `border-warning`, `hover:bg-primary-hover`, etc.
+    - Values: chalk `oklch(0.972 0.006 80)` (page), paper `oklch(0.99 0.004 80)` (card), ink `oklch(0.17 0.008 60)` (text), vermilion `oklch(0.54 0.2 33)` (primary/signal), oxblood destructive `oklch(0.44 0.16 15)`. Dark: night `oklch(0.15 0.008 60)`, chalk text, vermilion lifted to `oklch(0.66 0.19 33)` with **ink** (not chalk) text on it.
+    - `--input` is the control boundary (>= 3:1); `--border` is the decorative hairline. `--ring` is ink (light) / chalk (dark); one global `:focus-visible` rule (2px outline, 2px offset), components do not add rings.
+    - **Scoped surfaces:** classes `surface-vermilion`, `surface-ink`, `surface-chalk` re-theme every token inside (buttons, inputs, muted text, focus ring, borders), including in dark mode. `<Fill tone>` wraps them.
+    - Radius: `--radius: 0.25rem` -> `rounded-sm` 0, `md` 2px, `lg` 4px, `xl` 8px (controls use `md`, floating layers `lg`). `shadow-pop` is the only shadow token.
+  - **Fonts:** Archivo variable via `next/font/google` in `src/app/layout.tsx` (`axes: ["wdth"]`, weight 100-900 variable, variable `--font-archivo`, mapped into `--font-sans`); Geist removed; `--font-mono` is the system mono stack. Width is set with `font-variation-settings: "wdth"`; `@property --wdth` is registered (animatable for Phase 5's scroll-width headline). Verified in the browser: width 62/100/125 render distinct widths; Archivo digits are tabular by default and `tabular-nums` is honoured.
+  - **Type utilities** (`@utility` in `globals.css`): `t-display`, `t-headline`, `t-title`, `t-heading`, `t-lead`, `t-body`, `t-small`, `t-label`, `t-stat` (size via `--stat-size`), `t-num` (tabular lining figures), `wdth-<n>`.
+  - **Motion tokens** (CSS vars on `:root`): `--dur-instant 100ms`, `--dur-fast 150ms`, `--dur-base 200ms`, `--dur-slow 250ms`, `--dur-reveal 600ms`, `--dur-scene 900ms`; Tailwind easings `ease-out-quart|quint|expo`, `ease-in-out-quart`; use as `duration-(--dur-fast) ease-out-quart`. `prefers-reduced-motion` zeroes the durations and collapses all animations/transitions (spinner exempt, slowed). Per-effect still alternatives are listed in DESIGN.md > Components > Motion.
+  - **Primitives** (`src/components/ui/`), all token-only so they work on any surface:
+    - Restyled: `button` (variants `default` vermilion, `inverse` (flips with surface), `outline`, `secondary`, `ghost`, `destructive`, `link`; sizes `xs sm default lg xl icon icon-xs icon-sm icon-lg`; new `loading` prop), `input`, `textarea`, `label`, `select`, `card` (flat, no shadow), `badge` (rectangular tag; variants `default signal secondary outline destructive success warning ghost link`), `dialog`, `sheet`, `dropdown-menu`, `tooltip`, `tabs` (`default` segmented, `line` ruled), `progress`, `skeleton`, `sonner` (toast), `avatar` (square), `input-otp`. `separator` and `scroll-area` unchanged.
+    - New: `table` (compact/comfortable density, `numeric` cells, server-component safe), `stat`, `fill` (section-fill block), `chip` (`Chip`, `ChipGroup`, `ChipGroupItem`, Radix Toggle), `checkbox`, `field` (`Field`, `FieldLabel`, `FieldHint`, `FieldError`), `alert` (`info success warning destructive`), `empty-state`.
+  - `src/app/layout.tsx` now mounts the styled `Toaster` from `@/components/ui/sonner` (was the raw `sonner` one with `richColors`). `toast()` calls elsewhere are unchanged.
+  - Removed the five unused starter SVGs in `public/`. `public/fitfusion_hero_bg.png` stays until Phase 5.
+- **Deviations:**
+  - The `teach` flow's interview rounds were skipped: the phase file says to summarise the brief and proceed unless the user objects, and Part B is the approved brief. PRODUCT.md and DESIGN.md come from Part B plus the codebase; the creative decisions in DESIGN.md (North Star "The Training Sheet", oxblood for destructive, moss/amber status colours, 2px radius, ink-filled active nav row, `xl` brand button size) are mine and can be changed by editing DESIGN.md.
+  - Vermilion is `oklch(0.54 0.2 33)` (about #c82700), a little deeper than the PDF placeholder, because chalk-on-vermilion and vermilion-on-chalk both had to reach 4.5:1. A brighter red would have failed one of the two.
+  - Destructive is a separate oxblood, not vermilion, so danger and brand never look alike.
+  - Existing pages were not touched (out of scope): they still contain hard-coded `emerald-*` utilities (see Open issues) and old copy, and will look half-migrated until Phases 5 and 6. Button/card/badge density and radius changed globally, so spacing on current pages shifts slightly.
+- **Verify with:** `npm run build` (passes). Contrast: every pair listed in DESIGN.md > Colors > Contrast was recomputed from the real `globals.css` values with a WCAG script for light, dark, vermilion-light and vermilion-dark surfaces: 0 failures (body text 17.6:1 light / 17.0:1 dark; vermilion text on chalk and chalk on vermilion 5.15:1; ink on night-vermilion 5.8:1; input boundary 4.0:1 light / 3.6:1 dark). A temporary kitchen-sink route showed every primitive; Chrome screenshots at 390 / 820 / 1440 px in light and dark plus dialog, menu and toast showed no horizontal overflow and no console errors. The route was **deleted before commit** (a copy sits in the session scratchpad only); screenshots are not committed. To re-check a primitive later, create a throwaway page that renders it inside `<Fill tone="vermilion">` and a plain page, in both themes.
+- **Known caveats:**
+  - On a light `surface-vermilion`, `destructive` resolves to chalk (oxblood on red is unreadable); keep delete flows out of red fills (use a dialog).
+  - In dark mode `surface-ink` is the same as the page; separate it with a 1px `border-border` rule.
+  - `Stat` labels that wrap to two lines push that figure lower than its neighbours; keep labels to two words.
+  - `t-display` at 390 px holds about nine characters per line; "FITFUSION" fits, longer words need `t-headline`.
+  - `--chart-5` is a quiet fill (3:1), not a carrier of meaning. Disabled controls are exempt from contrast.
+  - The shadcn registry/`components.json` `baseColor: "slate"` is cosmetic only; tokens come from `globals.css`.
+- **Next phase needs:**
+  - Phase 5: read `DESIGN.md` first (Overview, Components > Motion, Composition recipes, Do's and Don'ts) and `PRODUCT.md`. Replace `bg-emerald-*`/`text-emerald-*` in `src/app/(marketing)/page.tsx`, `about/page.tsx` and `src/app/(dashboard)/dashboard/credits/page.tsx` (Phase 6 owns credits), drop the `#pricing` nav/footer links, replace the emerald (`#059669`) in `src/app/icon.tsx`, `apple-icon.tsx`, `opengraph-image.tsx`, `twitter-image.tsx` and the manifest theme colour with the vermilion/chalk tokens, and remove `public/fitfusion_hero_bg.png` once the landing page no longer references it. The navbar still uses the `Dumbbell` icon and old layout; build the new wordmark/nav from the DESIGN.md Navigation rules.
+  - Phase 6: use `Table`, `Stat`, `Chip`/`ChipGroup`, `Field`, `Alert`, `EmptyState`, `Progress`, `Checkbox`, `Skeleton` and `toast` as documented; `Button loading` for in-flight actions. Dashboard pages use `t-title` once per page; do not use `Fill`/`t-display` inside `/dashboard`.
+  - The backend PDF template can adopt the token values above (Archivo is still not installed in the image).
 
 ### Phase 5
 - Built:

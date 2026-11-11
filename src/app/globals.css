@@ -4,11 +4,25 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * FitFusion design tokens. Source of truth: DESIGN.md (rules) and this file (values).
+ * Palette: chalk / ink / vermilion, all OKLCH, neutrals tinted toward warm chalk (hue 60-80).
+ * Contrast pairs below were checked against WCAG 2.2 AA; see DESIGN.md "Contrast".
+ */
+
+/* ------------------------------------------------------------------ */
+/* Tailwind theme mapping                                              */
+/* ------------------------------------------------------------------ */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas,
+    monospace;
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -26,18 +40,26 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
+  --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-signal: var(--signal);
+  --color-signal-tint: var(--signal-tint);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* Squarer than the shadcn default: ruled sheets, not pills. */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -47,100 +69,384 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
-:root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0.03 165);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0.03 165);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0.03 165);
-  --primary: oklch(0.45 0.15 163);
-  --primary-foreground: oklch(0.985 0.01 163);
-  --secondary: oklch(0.965 0.015 163);
-  --secondary-foreground: oklch(0.25 0.06 163);
-  --muted: oklch(0.965 0.01 163);
-  --muted-foreground: oklch(0.55 0.04 165);
-  --accent: oklch(0.965 0.015 163);
-  --accent-foreground: oklch(0.25 0.06 163);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0.018 163);
-  --input: oklch(0.922 0.018 163);
-  --ring: oklch(0.55 0.12 163);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0.01 163);
-  --sidebar-foreground: oklch(0.145 0.03 165);
-  --sidebar-primary: oklch(0.45 0.15 163);
-  --sidebar-primary-foreground: oklch(0.985 0.01 163);
-  --sidebar-accent: oklch(0.965 0.015 163);
-  --sidebar-accent-foreground: oklch(0.25 0.06 163);
-  --sidebar-border: oklch(0.922 0.018 163);
-  --sidebar-ring: oklch(0.55 0.12 163);
+/* Static theme values (no var() references) so Tailwind generates real utilities. */
+@theme {
+  /* Elevation: flat at rest. Only floating layers (menus, dialogs, toasts) get a shadow. */
+  --shadow-pop: 0 1px 0 0 var(--border), 0 12px 28px -12px oklch(0.17 0.01 60 / 0.35);
+
+  /* Easings: exponential ease-out only. No bounce, no elastic. */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
-.dark {
-  --background: oklch(0.14 0.025 165);
-  --foreground: oklch(0.985 0.01 163);
-  --card: oklch(0.2 0.03 165);
-  --card-foreground: oklch(0.985 0.01 163);
-  --popover: oklch(0.2 0.03 165);
-  --popover-foreground: oklch(0.985 0.01 163);
-  --primary: oklch(0.65 0.18 163);
-  --primary-foreground: oklch(0.14 0.025 165);
-  --secondary: oklch(0.25 0.035 165);
-  --secondary-foreground: oklch(0.985 0.01 163);
-  --muted: oklch(0.25 0.035 165);
-  --muted-foreground: oklch(0.65 0.04 165);
-  --accent: oklch(0.25 0.035 165);
-  --accent-foreground: oklch(0.985 0.01 163);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.55 0.12 163);
-  --chart-1: oklch(0.55 0.2 163);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.2 0.03 165);
-  --sidebar-foreground: oklch(0.985 0.01 163);
-  --sidebar-primary: oklch(0.55 0.2 163);
-  --sidebar-primary-foreground: oklch(0.985 0.01 163);
-  --sidebar-accent: oklch(0.25 0.035 165);
-  --sidebar-accent-foreground: oklch(0.985 0.01 163);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.55 0.12 163);
+/* ------------------------------------------------------------------ */
+/* Colour tokens: light (default) and chalk surface                    */
+/* ------------------------------------------------------------------ */
+
+:root,
+.surface-chalk {
+  --radius: 0.25rem; /* sm 0, md 2px, lg 4px, xl 8px, 2xl 12px */
+
+  /* chalk / ink / vermilion */
+  --background: oklch(0.972 0.006 80); /* chalk  ~ #f8f5f1 */
+  --foreground: oklch(0.17 0.008 60); /* ink    ~ #120f0c */
+  --card: oklch(0.99 0.004 80); /* paper  ~ #fdfbf9 */
+  --card-foreground: oklch(0.17 0.008 60);
+  --popover: oklch(0.99 0.004 80);
+  --popover-foreground: oklch(0.17 0.008 60);
+
+  --primary: oklch(0.54 0.2 33); /* vermilion ~ #c82700 */
+  --primary-hover: oklch(0.47 0.18 33);
+  --primary-foreground: oklch(0.972 0.006 80);
+  --signal: oklch(0.54 0.2 33); /* vermilion as text / icon / rule colour */
+  --signal-tint: oklch(0.95 0.025 40); /* selected-row / info wash */
+
+  --secondary: oklch(0.94 0.008 80); /* sunk */
+  --secondary-foreground: oklch(0.17 0.008 60);
+  --muted: oklch(0.94 0.008 80);
+  --muted-foreground: oklch(0.44 0.01 70);
+  --accent: oklch(0.915 0.01 80); /* hover wash */
+  --accent-foreground: oklch(0.17 0.008 60);
+
+  --destructive: oklch(0.44 0.16 15); /* oxblood: reads as danger, not as brand */
+  --destructive-foreground: oklch(0.972 0.006 80);
+  --success: oklch(0.45 0.1 150);
+  --warning: oklch(0.48 0.1 70);
+
+  --border: oklch(0.88 0.008 80); /* decorative rules, 1px */
+  --input: oklch(0.58 0.01 75); /* control boundary, >= 3:1 on chalk and paper */
+  --ring: oklch(0.17 0.008 60);
+
+  --chart-1: oklch(0.54 0.2 33);
+  --chart-2: oklch(0.17 0.008 60);
+  --chart-3: oklch(0.5 0.02 70);
+  --chart-4: oklch(0.58 0.13 55);
+  --chart-5: oklch(0.6 0.01 75);
+
+  --sidebar: oklch(0.94 0.008 80);
+  --sidebar-foreground: oklch(0.17 0.008 60);
+  --sidebar-primary: oklch(0.54 0.2 33);
+  --sidebar-primary-foreground: oklch(0.972 0.006 80);
+  --sidebar-accent: oklch(0.915 0.01 80);
+  --sidebar-accent-foreground: oklch(0.17 0.008 60);
+  --sidebar-border: oklch(0.88 0.008 80);
+  --sidebar-ring: oklch(0.17 0.008 60);
+
+  /* Motion (see "Motion tokens" below). */
+  --dur-instant: 100ms;
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --dur-slow: 250ms;
+  --dur-reveal: 600ms;
+  --dur-scene: 900ms;
 }
 
-@keyframes gradient-shift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+/* ------------------------------------------------------------------ */
+/* Dark theme and ink surface (same palette, so an ink section in a    */
+/* light page behaves exactly like dark mode)                          */
+/* ------------------------------------------------------------------ */
+
+.dark,
+.surface-ink {
+  --background: oklch(0.15 0.008 60); /* ink   ~ #0e0a08 */
+  --foreground: oklch(0.95 0.008 80); /* chalk ~ #f1eee9 */
+  --card: oklch(0.19 0.008 60);
+  --card-foreground: oklch(0.95 0.008 80);
+  --popover: oklch(0.19 0.008 60);
+  --popover-foreground: oklch(0.95 0.008 80);
+
+  --primary: oklch(0.66 0.19 33); /* vermilion, lifted for dark ~ #ef5a3d */
+  --primary-hover: oklch(0.72 0.17 33);
+  --primary-foreground: oklch(0.15 0.008 60); /* ink on vermilion, NOT chalk (2.9:1) */
+  --signal: oklch(0.66 0.19 33);
+  --signal-tint: oklch(0.27 0.05 33);
+
+  --secondary: oklch(0.235 0.008 60);
+  --secondary-foreground: oklch(0.95 0.008 80);
+  --muted: oklch(0.235 0.008 60);
+  --muted-foreground: oklch(0.72 0.01 75);
+  --accent: oklch(0.275 0.008 60);
+  --accent-foreground: oklch(0.95 0.008 80);
+
+  --destructive: oklch(0.7 0.18 17);
+  --destructive-foreground: oklch(0.15 0.008 60);
+  --success: oklch(0.75 0.12 150);
+  --warning: oklch(0.78 0.11 75);
+
+  --border: oklch(0.3 0.008 60);
+  --input: oklch(0.52 0.01 70);
+  --ring: oklch(0.95 0.008 80);
+
+  --chart-1: oklch(0.66 0.19 33);
+  --chart-2: oklch(0.95 0.008 80);
+  --chart-3: oklch(0.7 0.02 75);
+  --chart-4: oklch(0.76 0.12 60);
+  --chart-5: oklch(0.58 0.01 70);
+
+  --sidebar: oklch(0.19 0.008 60);
+  --sidebar-foreground: oklch(0.95 0.008 80);
+  --sidebar-primary: oklch(0.66 0.19 33);
+  --sidebar-primary-foreground: oklch(0.15 0.008 60);
+  --sidebar-accent: oklch(0.275 0.008 60);
+  --sidebar-accent-foreground: oklch(0.95 0.008 80);
+  --sidebar-border: oklch(0.3 0.008 60);
+  --sidebar-ring: oklch(0.95 0.008 80);
 }
 
-.animate-gradient-text {
-  background: linear-gradient(
-    270deg,
-    oklch(0.65 0.18 163),
-    oklch(0.7 0.16 195),
-    oklch(0.65 0.15 230)
-  );
-  background-size: 200% 200%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  animation: gradient-shift 3s ease infinite;
+/* ------------------------------------------------------------------ */
+/* Vermilion surface: a whole section filled with the brand red.       */
+/* Primitives inside it re-theme themselves through these tokens.      */
+/* ------------------------------------------------------------------ */
+
+.surface-vermilion {
+  --background: oklch(0.54 0.2 33);
+  --foreground: oklch(0.972 0.006 80); /* chalk on vermilion, 5.2:1 */
+  --card: oklch(0.48 0.19 33);
+  --card-foreground: oklch(0.972 0.006 80);
+  --popover: oklch(0.48 0.19 33);
+  --popover-foreground: oklch(0.972 0.006 80);
+
+  --primary: oklch(0.17 0.008 60); /* ink button on a red field */
+  --primary-hover: oklch(0.27 0.01 60);
+  --primary-foreground: oklch(0.972 0.006 80);
+  --signal: oklch(0.972 0.006 80);
+  --signal-tint: oklch(0.48 0.19 33);
+
+  --secondary: oklch(0.48 0.19 33);
+  --secondary-foreground: oklch(0.972 0.006 80);
+  --muted: oklch(0.48 0.19 33);
+  --muted-foreground: oklch(0.95 0.015 70);
+  --accent: oklch(0.44 0.17 33);
+  --accent-foreground: oklch(0.972 0.006 80);
+
+  /* On a red field an oxblood error is unreadable, so errors go chalk and lean on icon + weight. */
+  --destructive: oklch(0.972 0.006 80);
+  --destructive-foreground: oklch(0.17 0.008 60);
+
+  --border: oklch(0.972 0.006 80 / 0.4);
+  --input: oklch(0.972 0.006 80);
+  --ring: oklch(0.972 0.006 80);
 }
+
+/* In dark mode the red field is brighter, so type on it flips to ink. */
+.dark .surface-vermilion {
+  --background: oklch(0.66 0.19 33);
+  --foreground: oklch(0.15 0.008 60); /* ink on vermilion, 5.8:1 */
+  --card: oklch(0.7 0.17 33);
+  --card-foreground: oklch(0.15 0.008 60);
+  --popover: oklch(0.7 0.17 33);
+  --popover-foreground: oklch(0.15 0.008 60);
+
+  --primary: oklch(0.15 0.008 60);
+  --primary-hover: oklch(0.25 0.01 60);
+  --primary-foreground: oklch(0.95 0.008 80);
+  --signal: oklch(0.15 0.008 60);
+  --signal-tint: oklch(0.7 0.17 33);
+
+  --secondary: oklch(0.7 0.17 33);
+  --secondary-foreground: oklch(0.15 0.008 60);
+  --muted: oklch(0.7 0.17 33);
+  --muted-foreground: oklch(0.2 0.02 40);
+  --accent: oklch(0.74 0.15 33);
+  --accent-foreground: oklch(0.15 0.008 60);
+
+  --destructive: oklch(0.15 0.008 60);
+  --destructive-foreground: oklch(0.95 0.008 80);
+
+  --border: oklch(0.15 0.008 60 / 0.4);
+  --input: oklch(0.15 0.008 60);
+  --ring: oklch(0.15 0.008 60);
+}
+
+.surface-chalk,
+.surface-ink,
+.surface-vermilion {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion tokens and reduced motion                                    */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  .surface-chalk,
+  .dark,
+  .surface-ink,
+  .surface-vermilion {
+    --dur-instant: 1ms;
+    --dur-fast: 1ms;
+    --dur-base: 1ms;
+    --dur-slow: 1ms;
+    --dur-reveal: 1ms;
+    --dur-scene: 1ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* A loading spinner is state, not decoration: keep it turning, slowly. */
+  .animate-spin {
+    animation-duration: 2.4s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Typography                                                          */
+/* ------------------------------------------------------------------ */
+
+/* Archivo's width axis (62 condensed .. 125 expanded). Registered so it can be animated. */
+@property --wdth {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 100;
+}
+
+/* Width helper: wdth-62, wdth-75, wdth-100, ... */
+@utility wdth-* {
+  --wdth: --value(number);
+  font-variation-settings: "wdth" var(--wdth);
+}
+
+/* Tabular, lining figures for anything that is read as a column of numbers. */
+@utility t-num {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/*
+ * Type roles. Brand roles (display, headline, lead) are fluid; product roles
+ * (title, heading, body, small, label, stat) are fixed rem.
+ * Condensed + heavy is for headlines and numbers only. Never for labels, buttons, body.
+ */
+@utility t-display {
+  --wdth: 62;
+  font-variation-settings: "wdth" var(--wdth);
+  font-size: clamp(3.5rem, 1.5rem + 10vw, 9.5rem);
+  font-weight: 900;
+  line-height: 0.86;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+@utility t-headline {
+  --wdth: 68;
+  font-variation-settings: "wdth" var(--wdth);
+  font-size: clamp(2.5rem, 1.25rem + 5.5vw, 5rem);
+  font-weight: 850;
+  line-height: 0.92;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+@utility t-title {
+  --wdth: 75;
+  font-variation-settings: "wdth" var(--wdth);
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.08;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+@utility t-heading {
+  --wdth: 90;
+  font-variation-settings: "wdth" var(--wdth);
+  font-size: 1.25rem;
+  font-weight: 750;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+@utility t-lead {
+  font-size: clamp(1.125rem, 1rem + 0.6vw, 1.375rem);
+  font-weight: 450;
+  line-height: 1.5;
+  max-width: 60ch;
+  text-wrap: pretty;
+}
+
+@utility t-body {
+  font-size: 1rem;
+  font-weight: 420;
+  line-height: 1.55;
+  max-width: 70ch;
+  text-wrap: pretty;
+}
+
+@utility t-small {
+  font-size: 0.875rem;
+  font-weight: 420;
+  line-height: 1.5;
+}
+
+@utility t-label {
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* Big figures: condensed, heavy, tabular. Size with --stat-size or text-* utilities. */
+@utility t-stat {
+  --wdth: 62;
+  font-variation-settings: "wdth" var(--wdth);
+  font-size: var(--stat-size, 3rem);
+  font-weight: 850;
+  line-height: 0.9;
+  letter-spacing: -0.005em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-weight: 420;
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  /* One focus indicator for the whole app: 2px solid, offset 2px, >= 3:1 on every surface. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
   }
 }

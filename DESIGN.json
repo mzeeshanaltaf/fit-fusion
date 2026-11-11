@@ -1,0 +1,624 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T06:47:10.742Z",
+  "title": "Design System: FitFusion",
+  "extensions": {
+    "colorMeta": {
+      "chalk": {
+        "role": "neutral",
+        "displayName": "Chalk",
+        "canonical": "oklch(0.972 0.006 80)",
+        "tonalRamp": [
+          "oklch(0.18 0.006 80)",
+          "oklch(0.28 0.006 80)",
+          "oklch(0.4 0.006 80)",
+          "oklch(0.52 0.006 80)",
+          "oklch(0.64 0.006 80)",
+          "oklch(0.76 0.006 80)",
+          "oklch(0.87 0.002 80)",
+          "oklch(0.95 0.002 80)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "oklch(0.99 0.004 80)",
+        "tonalRamp": [
+          "oklch(0.18 0.004 80)",
+          "oklch(0.28 0.004 80)",
+          "oklch(0.4 0.004 80)",
+          "oklch(0.52 0.004 80)",
+          "oklch(0.64 0.004 80)",
+          "oklch(0.76 0.004 80)",
+          "oklch(0.87 0.001 80)",
+          "oklch(0.95 0.001 80)"
+        ]
+      },
+      "sunk": {
+        "role": "neutral",
+        "displayName": "Sunk",
+        "canonical": "oklch(0.94 0.008 80)",
+        "tonalRamp": [
+          "oklch(0.18 0.008 80)",
+          "oklch(0.28 0.008 80)",
+          "oklch(0.4 0.008 80)",
+          "oklch(0.52 0.008 80)",
+          "oklch(0.64 0.008 80)",
+          "oklch(0.76 0.008 80)",
+          "oklch(0.87 0.003 80)",
+          "oklch(0.95 0.003 80)"
+        ]
+      },
+      "hover-wash": {
+        "role": "neutral",
+        "displayName": "Hover Wash",
+        "canonical": "oklch(0.915 0.01 80)",
+        "tonalRamp": [
+          "oklch(0.18 0.010 80)",
+          "oklch(0.28 0.010 80)",
+          "oklch(0.4 0.010 80)",
+          "oklch(0.52 0.010 80)",
+          "oklch(0.64 0.010 80)",
+          "oklch(0.76 0.010 80)",
+          "oklch(0.87 0.003 80)",
+          "oklch(0.95 0.003 80)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(0.17 0.008 60)",
+        "tonalRamp": [
+          "oklch(0.18 0.008 60)",
+          "oklch(0.28 0.008 60)",
+          "oklch(0.4 0.008 60)",
+          "oklch(0.52 0.008 60)",
+          "oklch(0.64 0.008 60)",
+          "oklch(0.76 0.008 60)",
+          "oklch(0.87 0.003 60)",
+          "oklch(0.95 0.003 60)"
+        ]
+      },
+      "vermilion": {
+        "role": "primary",
+        "displayName": "Vermilion",
+        "canonical": "oklch(0.54 0.2 33)",
+        "tonalRamp": [
+          "oklch(0.18 0.200 33)",
+          "oklch(0.28 0.200 33)",
+          "oklch(0.4 0.200 33)",
+          "oklch(0.52 0.200 33)",
+          "oklch(0.64 0.200 33)",
+          "oklch(0.76 0.200 33)",
+          "oklch(0.87 0.070 33)",
+          "oklch(0.95 0.070 33)"
+        ]
+      },
+      "vermilion-hover": {
+        "role": "primary",
+        "displayName": "Vermilion Hover",
+        "canonical": "oklch(0.47 0.18 33)",
+        "tonalRamp": [
+          "oklch(0.18 0.180 33)",
+          "oklch(0.28 0.180 33)",
+          "oklch(0.4 0.180 33)",
+          "oklch(0.52 0.180 33)",
+          "oklch(0.64 0.180 33)",
+          "oklch(0.76 0.180 33)",
+          "oklch(0.87 0.063 33)",
+          "oklch(0.95 0.063 33)"
+        ]
+      },
+      "vermilion-tint": {
+        "role": "primary",
+        "displayName": "Vermilion Tint",
+        "canonical": "oklch(0.95 0.025 40)",
+        "tonalRamp": [
+          "oklch(0.18 0.025 40)",
+          "oklch(0.28 0.025 40)",
+          "oklch(0.4 0.025 40)",
+          "oklch(0.52 0.025 40)",
+          "oklch(0.64 0.025 40)",
+          "oklch(0.76 0.025 40)",
+          "oklch(0.87 0.009 40)",
+          "oklch(0.95 0.009 40)"
+        ]
+      },
+      "graphite": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "oklch(0.44 0.01 70)",
+        "tonalRamp": [
+          "oklch(0.18 0.010 70)",
+          "oklch(0.28 0.010 70)",
+          "oklch(0.4 0.010 70)",
+          "oklch(0.52 0.010 70)",
+          "oklch(0.64 0.010 70)",
+          "oklch(0.76 0.010 70)",
+          "oklch(0.87 0.003 70)",
+          "oklch(0.95 0.003 70)"
+        ]
+      },
+      "field-line": {
+        "role": "neutral",
+        "displayName": "Field Line",
+        "canonical": "oklch(0.58 0.01 75)",
+        "tonalRamp": [
+          "oklch(0.18 0.010 75)",
+          "oklch(0.28 0.010 75)",
+          "oklch(0.4 0.010 75)",
+          "oklch(0.52 0.010 75)",
+          "oklch(0.64 0.010 75)",
+          "oklch(0.76 0.010 75)",
+          "oklch(0.87 0.003 75)",
+          "oklch(0.95 0.003 75)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "oklch(0.88 0.008 80)",
+        "tonalRamp": [
+          "oklch(0.18 0.008 80)",
+          "oklch(0.28 0.008 80)",
+          "oklch(0.4 0.008 80)",
+          "oklch(0.52 0.008 80)",
+          "oklch(0.64 0.008 80)",
+          "oklch(0.76 0.008 80)",
+          "oklch(0.87 0.003 80)",
+          "oklch(0.95 0.003 80)"
+        ]
+      },
+      "oxblood": {
+        "role": "status",
+        "displayName": "Oxblood",
+        "canonical": "oklch(0.44 0.16 15)",
+        "tonalRamp": [
+          "oklch(0.18 0.160 15)",
+          "oklch(0.28 0.160 15)",
+          "oklch(0.4 0.160 15)",
+          "oklch(0.52 0.160 15)",
+          "oklch(0.64 0.160 15)",
+          "oklch(0.76 0.160 15)",
+          "oklch(0.87 0.056 15)",
+          "oklch(0.95 0.056 15)"
+        ]
+      },
+      "moss": {
+        "role": "status",
+        "displayName": "Moss",
+        "canonical": "oklch(0.45 0.1 150)",
+        "tonalRamp": [
+          "oklch(0.18 0.100 150)",
+          "oklch(0.28 0.100 150)",
+          "oklch(0.4 0.100 150)",
+          "oklch(0.52 0.100 150)",
+          "oklch(0.64 0.100 150)",
+          "oklch(0.76 0.100 150)",
+          "oklch(0.87 0.035 150)",
+          "oklch(0.95 0.035 150)"
+        ]
+      },
+      "amber": {
+        "role": "status",
+        "displayName": "Amber",
+        "canonical": "oklch(0.48 0.1 70)",
+        "tonalRamp": [
+          "oklch(0.18 0.100 70)",
+          "oklch(0.28 0.100 70)",
+          "oklch(0.4 0.100 70)",
+          "oklch(0.52 0.100 70)",
+          "oklch(0.64 0.100 70)",
+          "oklch(0.76 0.100 70)",
+          "oklch(0.87 0.035 70)",
+          "oklch(0.95 0.035 70)"
+        ]
+      },
+      "night": {
+        "role": "neutral-dark",
+        "displayName": "Night",
+        "canonical": "oklch(0.15 0.008 60)",
+        "tonalRamp": [
+          "oklch(0.18 0.008 60)",
+          "oklch(0.28 0.008 60)",
+          "oklch(0.4 0.008 60)",
+          "oklch(0.52 0.008 60)",
+          "oklch(0.64 0.008 60)",
+          "oklch(0.76 0.008 60)",
+          "oklch(0.87 0.003 60)",
+          "oklch(0.95 0.003 60)"
+        ]
+      },
+      "night-paper": {
+        "role": "neutral-dark",
+        "displayName": "Night Paper",
+        "canonical": "oklch(0.19 0.008 60)",
+        "tonalRamp": [
+          "oklch(0.18 0.008 60)",
+          "oklch(0.28 0.008 60)",
+          "oklch(0.4 0.008 60)",
+          "oklch(0.52 0.008 60)",
+          "oklch(0.64 0.008 60)",
+          "oklch(0.76 0.008 60)",
+          "oklch(0.87 0.003 60)",
+          "oklch(0.95 0.003 60)"
+        ]
+      },
+      "night-sunk": {
+        "role": "neutral-dark",
+        "displayName": "Night Sunk",
+        "canonical": "oklch(0.235 0.008 60)",
+        "tonalRamp": [
+          "oklch(0.18 0.008 60)",
+          "oklch(0.28 0.008 60)",
+          "oklch(0.4 0.008 60)",
+          "oklch(0.52 0.008 60)",
+          "oklch(0.64 0.008 60)",
+          "oklch(0.76 0.008 60)",
+          "oklch(0.87 0.003 60)",
+          "oklch(0.95 0.003 60)"
+        ]
+      },
+      "night-chalk": {
+        "role": "neutral-dark",
+        "displayName": "Night Chalk",
+        "canonical": "oklch(0.95 0.008 80)",
+        "tonalRamp": [
+          "oklch(0.18 0.008 80)",
+          "oklch(0.28 0.008 80)",
+          "oklch(0.4 0.008 80)",
+          "oklch(0.52 0.008 80)",
+          "oklch(0.64 0.008 80)",
+          "oklch(0.76 0.008 80)",
+          "oklch(0.87 0.003 80)",
+          "oklch(0.95 0.003 80)"
+        ]
+      },
+      "night-vermilion": {
+        "role": "primary-dark",
+        "displayName": "Night Vermilion",
+        "canonical": "oklch(0.66 0.19 33)",
+        "tonalRamp": [
+          "oklch(0.18 0.190 33)",
+          "oklch(0.28 0.190 33)",
+          "oklch(0.4 0.190 33)",
+          "oklch(0.52 0.190 33)",
+          "oklch(0.64 0.190 33)",
+          "oklch(0.76 0.190 33)",
+          "oklch(0.87 0.066 33)",
+          "oklch(0.95 0.066 33)"
+        ]
+      },
+      "night-graphite": {
+        "role": "neutral-dark",
+        "displayName": "Night Graphite",
+        "canonical": "oklch(0.72 0.01 75)",
+        "tonalRamp": [
+          "oklch(0.18 0.010 75)",
+          "oklch(0.28 0.010 75)",
+          "oklch(0.4 0.010 75)",
+          "oklch(0.52 0.010 75)",
+          "oklch(0.64 0.010 75)",
+          "oklch(0.76 0.010 75)",
+          "oklch(0.87 0.003 75)",
+          "oklch(0.95 0.003 75)"
+        ]
+      },
+      "night-field-line": {
+        "role": "neutral-dark",
+        "displayName": "Night Field Line",
+        "canonical": "oklch(0.52 0.01 70)",
+        "tonalRamp": [
+          "oklch(0.18 0.010 70)",
+          "oklch(0.28 0.010 70)",
+          "oklch(0.4 0.010 70)",
+          "oklch(0.52 0.010 70)",
+          "oklch(0.64 0.010 70)",
+          "oklch(0.76 0.010 70)",
+          "oklch(0.87 0.003 70)",
+          "oklch(0.95 0.003 70)"
+        ]
+      },
+      "night-rule": {
+        "role": "neutral-dark",
+        "displayName": "Night Rule",
+        "canonical": "oklch(0.3 0.008 60)",
+        "tonalRamp": [
+          "oklch(0.18 0.008 60)",
+          "oklch(0.28 0.008 60)",
+          "oklch(0.4 0.008 60)",
+          "oklch(0.52 0.008 60)",
+          "oklch(0.64 0.008 60)",
+          "oklch(0.76 0.008 60)",
+          "oklch(0.87 0.003 60)",
+          "oklch(0.95 0.003 60)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "One per page, landing hero only. Condensed 62, weight 900, uppercase."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Brand section statements and the closing call to action."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "The single page title of a dashboard screen."
+      },
+      "heading": {
+        "displayName": "Heading",
+        "purpose": "Card, workout, dialog and empty-state titles."
+      },
+      "lead": {
+        "displayName": "Lead",
+        "purpose": "One intro paragraph per brand section, max 60ch."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Reading text, max 70ch."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Hints, captions, table text, metadata."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Table headers, stat labels, eyebrows. Normal width, uppercase, 12px minimum."
+      },
+      "stat": {
+        "displayName": "Stat",
+        "purpose": "Every headline number: condensed, heavy, tabular lining figures."
+      }
+    },
+    "shadows": [
+      {
+        "name": "pop",
+        "value": "0 1px 0 0 var(--border), 0 12px 28px -12px oklch(0.17 0.01 60 / 0.35)",
+        "purpose": "Floating layers only: menus, dialogs, sheets, toasts. Resting surfaces are flat."
+      }
+    ],
+    "motion": [
+      {
+        "name": "dur-instant",
+        "value": "100ms",
+        "purpose": "Micro feedback."
+      },
+      {
+        "name": "dur-fast",
+        "value": "150ms",
+        "purpose": "Hover, press, colour changes."
+      },
+      {
+        "name": "dur-base",
+        "value": "200ms",
+        "purpose": "Dialogs, menus, tab changes."
+      },
+      {
+        "name": "dur-slow",
+        "value": "250ms",
+        "purpose": "Progress, sheets. Upper bound for app motion."
+      },
+      {
+        "name": "dur-reveal",
+        "value": "600ms",
+        "purpose": "Brand only: headline assembly, reveals."
+      },
+      {
+        "name": "dur-scene",
+        "value": "900ms",
+        "purpose": "Brand only: scroll scenes."
+      },
+      {
+        "name": "ease-out-quart",
+        "value": "cubic-bezier(0.25, 1, 0.5, 1)",
+        "purpose": "Default easing."
+      },
+      {
+        "name": "ease-out-quint",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Stronger deceleration for larger moves."
+      },
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Brand entrances."
+      },
+      {
+        "name": "ease-in-out-quart",
+        "value": "cubic-bezier(0.76, 0, 0.24, 1)",
+        "purpose": "Looping progress only."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one vermilion action per view.",
+      "html": "<button class=\"ds-btn-primary\">Generate plan</button>",
+      "css": ".ds-btn-primary { font: 650 14px/1 Archivo, system-ui, sans-serif; height: 40px; padding: 8px 16px; border-radius: 2px; border: 1px solid transparent; background: oklch(0.54 0.2 33); color: oklch(0.972 0.006 80); cursor: pointer; transition: background-color 150ms cubic-bezier(0.25, 1, 0.5, 1), transform 150ms;  } .ds-btn-primary:hover { background: oklch(0.47 0.18 33); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid oklch(0.17 0.008 60); outline-offset: 2px; }"
+    },
+    {
+      "name": "Inverse Button",
+      "kind": "button",
+      "refersTo": "button-inverse",
+      "description": "Ink on chalk; flips to chalk on ink and vermilion surfaces.",
+      "html": "<button class=\"ds-btn-inverse\">Download PDF</button>",
+      "css": ".ds-btn-inverse { font: 650 14px/1 Archivo, system-ui, sans-serif; height: 40px; padding: 8px 16px; border-radius: 2px; border: 1px solid transparent; background: oklch(0.17 0.008 60); color: oklch(0.972 0.006 80); cursor: pointer; transition: background-color 150ms cubic-bezier(0.25, 1, 0.5, 1), transform 150ms;  } .ds-btn-inverse:hover { background: oklch(0.17 0.008 60 / 0.85); } .ds-btn-inverse:focus-visible { outline: 2px solid oklch(0.17 0.008 60); outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "1px ink border, transparent fill, secondary action.",
+      "html": "<button class=\"ds-btn-outline\">Swap workout</button>",
+      "css": ".ds-btn-outline { font: 650 14px/1 Archivo, system-ui, sans-serif; height: 40px; padding: 8px 16px; border-radius: 2px; border: 1px solid transparent; background: transparent; color: oklch(0.17 0.008 60); cursor: pointer; transition: background-color 150ms cubic-bezier(0.25, 1, 0.5, 1), transform 150ms; border-color: oklch(0.17 0.008 60); } .ds-btn-outline:hover { background: oklch(0.915 0.01 80); } .ds-btn-outline:focus-visible { outline: 2px solid oklch(0.17 0.008 60); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Paper fill, 1px field line, ink border on hover and focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"34\" />",
+      "css": ".ds-input { font: 420 16px/1.4 Archivo, system-ui, sans-serif; height: 40px; width: 220px; padding: 8px 12px; border-radius: 2px; border: 1px solid oklch(0.58 0.01 75); background: oklch(0.99 0.004 80); color: oklch(0.17 0.008 60); } .ds-input::placeholder { color: oklch(0.44 0.01 70); } .ds-input:hover, .ds-input:focus-visible { border-color: oklch(0.17 0.008 60); } .ds-input:focus-visible { outline: 2px solid oklch(0.17 0.008 60); outline-offset: 2px; }"
+    },
+    {
+      "name": "Equipment Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Selectable choice; selected is ink fill plus a check.",
+      "html": "<button class=\"ds-chip\" aria-pressed=\"false\">barbell</button> <button class=\"ds-chip ds-chip-on\" aria-pressed=\"true\">&#10003; dumbbells</button>",
+      "css": ".ds-chip { font: 650 14px/1 Archivo, system-ui, sans-serif; height: 40px; padding: 0 14px; border-radius: 2px; border: 1px solid oklch(0.58 0.01 75); background: oklch(0.99 0.004 80); color: oklch(0.17 0.008 60); cursor: pointer; transition: background-color 150ms, border-color 150ms; } .ds-chip:hover { border-color: oklch(0.17 0.008 60); } .ds-chip-on { background: oklch(0.17 0.008 60); border-color: oklch(0.17 0.008 60); color: oklch(0.972 0.006 80); } .ds-chip:focus-visible { outline: 2px solid oklch(0.17 0.008 60); outline-offset: 2px; }"
+    },
+    {
+      "name": "Tag Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Rectangular uppercase tag, never a pill.",
+      "html": "<span class=\"ds-badge\">Strength</span> <span class=\"ds-badge ds-badge-signal\">New</span>",
+      "css": ".ds-badge { display: inline-block; font: 700 11px/16px Archivo, system-ui, sans-serif; letter-spacing: 0.07em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px; background: oklch(0.17 0.008 60); color: oklch(0.972 0.006 80); } .ds-badge-signal { background: oklch(0.54 0.2 33); }"
+    },
+    {
+      "name": "Sheet Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Flat paper sheet with a hairline rule, no shadow.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Full Body Strength Builder</h3><p class=\"ds-card-meta\">45 min / dumbbells, barbell, bench</p></div>",
+      "css": ".ds-card { width: 320px; padding: 20px; border: 1px solid oklch(0.88 0.008 80); border-radius: 2px; background: oklch(0.99 0.004 80); color: oklch(0.17 0.008 60); font-family: Archivo, system-ui, sans-serif; } .ds-card-title { margin: 0 0 6px; font-size: 20px; line-height: 1.2; font-weight: 750; font-variation-settings: \"wdth\" 90; } .ds-card-meta { margin: 0; font-size: 14px; color: oklch(0.44 0.01 70); }"
+    },
+    {
+      "name": "Stat",
+      "kind": "custom",
+      "refersTo": "stat",
+      "description": "Label over a condensed, heavy, tabular figure.",
+      "html": "<div class=\"ds-stat\"><p class=\"ds-stat-label\">Target</p><p class=\"ds-stat-value\">2,050<span class=\"ds-stat-unit\">kcal</span></p></div>",
+      "css": ".ds-stat { font-family: Archivo, system-ui, sans-serif; color: oklch(0.17 0.008 60); } .ds-stat-label { margin: 0 0 6px; font: 650 12px/1.2 Archivo, system-ui, sans-serif; letter-spacing: 0.07em; text-transform: uppercase; color: oklch(0.44 0.01 70); } .ds-stat-value { margin: 0; font-size: 48px; line-height: 0.9; font-weight: 850; font-variation-settings: \"wdth\" 62; font-variant-numeric: tabular-nums lining-nums; } .ds-stat-unit { margin-left: 6px; font-size: 15px; font-weight: 600; font-variation-settings: \"wdth\" 100; color: oklch(0.44 0.01 70); }"
+    },
+    {
+      "name": "Plan Table",
+      "kind": "custom",
+      "refersTo": "table",
+      "description": "Ruled training sheet: 2px ink header rule, hairline rows, right-aligned tabular numbers.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Exercise</th><th class=\"n\">Sets</th><th class=\"n\">Reps</th><th class=\"n\">Rest</th></tr></thead><tbody><tr><td>Squats</td><td class=\"n\">3</td><td class=\"n\">8-12</td><td class=\"n\">60 s</td></tr><tr class=\"sel\"><td>Bench press</td><td class=\"n\">4</td><td class=\"n\">6-8</td><td class=\"n\">90 s</td></tr></tbody></table>",
+      "css": ".ds-table { width: 340px; border-collapse: collapse; font: 420 14px/1.5 Archivo, system-ui, sans-serif; color: oklch(0.17 0.008 60); } .ds-table th { padding: 8px; text-align: left; font: 650 12px/1.2 Archivo, system-ui, sans-serif; letter-spacing: 0.07em; text-transform: uppercase; color: oklch(0.44 0.01 70); border-bottom: 2px solid oklch(0.17 0.008 60); } .ds-table td { padding: 8px; border-bottom: 1px solid oklch(0.88 0.008 80); font-weight: 600; } .ds-table .n { text-align: right; font-variant-numeric: tabular-nums lining-nums; } .ds-table .sel td { background: oklch(0.95 0.025 40); }"
+    },
+    {
+      "name": "Vermilion Fill",
+      "kind": "custom",
+      "refersTo": "fill-vermilion",
+      "description": "Full-bleed brand section; type is chalk, primary button becomes ink.",
+      "html": "<section class=\"ds-fill\"><h2 class=\"ds-fill-h\">10 free plans when you sign up</h2><button class=\"ds-fill-btn\">Start free</button></section>",
+      "css": ".ds-fill { width: 360px; padding: 32px 24px; background: oklch(0.54 0.2 33); color: oklch(0.972 0.006 80); font-family: Archivo, system-ui, sans-serif; } .ds-fill-h { margin: 0 0 20px; font-size: 40px; line-height: 0.92; font-weight: 850; font-variation-settings: \"wdth\" 68; text-transform: uppercase; } .ds-fill-btn { height: 48px; padding: 0 24px; border: 0; border-radius: 2px; background: oklch(0.17 0.008 60); color: oklch(0.972 0.006 80); font: 700 14px/1 Archivo, system-ui, sans-serif; letter-spacing: 0.07em; text-transform: uppercase; cursor: pointer; } .ds-fill-btn:focus-visible { outline: 2px solid oklch(0.972 0.006 80); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Training Sheet",
+    "overview": "\n**Creative North Star: \"The Training Sheet\"**\n\nA printed training sheet pinned up in a gym: ruled columns, big condensed numbers, one loud red, nothing decorative. Every screen should look like something a coach would hand you, not something a startup would pitch you. Information is the ornament. The plan is the product, so the plan is also the picture: there are no photographs, no illustrations of plans, no stock fitness imagery. Real exercise names, real sets and reps, real macro tables carry the visuals.\n\nThe system has two registers that share one set of tokens. **Brand** surfaces (landing, about, contact, legal, auth) are loud: condensed-heavy display type, full-bleed vermilion fills, motion that performs. **Product** surfaces (everything under `/dashboard`) are calm and dense: fixed-size type, ruled tables, flat sheets, motion that only reports state. Colour strategy is **Committed**: chalk and ink do the reading, and vermilion is allowed to take 30 to 60 percent of a surface when a section is meant to shout (a closing call to action, one hero statement). In the app vermilion falls back to the single primary action per view and the active state.\n\nLight is the default and the design target (read under gym lighting, on a phone, at arm's length). Dark mode keeps the same palette inverted: night ink for the page, chalk for type, a lifted vermilion that stays at 4.5:1 or better. It stays on the existing `next-themes` toggle (`.dark` class on `<html>`).\n\nThis system explicitly rejects (from PRODUCT.md): the badge-heading-three-cards SaaS template; \"powered by AI\" copy; a stock gym photograph under a dark overlay; an icon in a tinted square as a feature opener; static, lifeless marketing pages; decorative motion in the app; emerald green; pricing tiers.",
+    "keyCharacteristics": [
+      "Flat. Hairline rules and fills create structure; shadows exist only on floating layers.",
+      "Squared. 2px radius on controls, 4px on floating layers. Nothing is a pill.",
+      "One red. Vermilion is the only chromatic brand colour; status colours (oxblood, moss, amber) are quiet and rare.",
+      "Numbers first. Condensed, heavy, tabular figures at large size; words are small and plain.",
+      "Uppercase is reserved for display headlines and short labels. Body, buttons and table text are sentence case.",
+      "Layout: left-aligned and ruled. 72rem (`max-w-6xl`) content column, 16px gutters on phone and 24px from `sm`. Vertical rhythm is deliberate, not uniform: 4px base, tight groups (8 to 16px), loose separations (40 to 64px), section padding `py-16 sm:py-24`.",
+      "Responsive means structural: sidebar collapses to a sheet, tables scroll sideways inside their own region, grids go from one column to two (`md`) to three or four (`lg`). Fluid type is for brand roles only."
+    ],
+    "rules": [
+      {
+        "name": "The One Red Rule",
+        "body": "There is exactly one chromatic brand colour. If a second hue is tempting, the answer is ink or chalk. Status colours are the only exception and stay small.",
+        "section": "colors"
+      },
+      {
+        "name": "The Flood Rule",
+        "body": "Vermilion is either a pinpoint (one primary action, one active state per view) or a flood (a whole section). The middle ground, red tints and red gradients sprinkled everywhere, is forbidden. At most one vermilion flood per screen height, never two stacked.",
+        "section": "colors"
+      },
+      {
+        "name": "The Not-Colour-Alone Rule",
+        "body": "Selected, error, success and progress are always carried by a second signal: a check mark, an icon, a number, a thicker border.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Emerald Rule",
+        "body": "Emerald belonged to the old template. Any `emerald-*`, `green-*` or teal utility in new work is a defect.",
+        "section": "colors"
+      },
+      {
+        "name": "The Condensed-Is-Loud Rule",
+        "body": "If it is a number or a headline, it may be condensed. If a person has to read it carefully or click it, it is normal width.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Display Rule",
+        "body": "One `t-display` per page. A second one is a headline.",
+        "section": "typography"
+      },
+      {
+        "name": "The Column Rule",
+        "body": "Numbers that sit in a column (sets, reps, rest, calories, credits) are right-aligned and tabular. Always.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-At-Rest Rule",
+        "body": "If a card, button, input or tab has a shadow while nothing is happening to it, remove the shadow.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Ruled-Not-Boxed Rule",
+        "body": "Group related content with a 2px ink rule above it or a hairline between rows before reaching for a bordered card. Never nest cards.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** show the plan itself: a real `Table` of exercise, sets, reps and rest is the hero image of every marketing section that talks about plans.",
+      "**Do** put every headline number in `Stat` / `t-stat`, tabular and right-aligned in tables.",
+      "**Do** use `default` Button once per view; use `inverse`, `outline` or `ghost` for everything else.",
+      "**Do** wrap full-bleed colour in `<Fill>` / `surface-*` so tokens re-resolve; write children with semantic tokens only (`bg-card`, `text-muted-foreground`, `border-input`).",
+      "**Do** keep touch targets at 40px minimum, 44px (`size=\"lg\"`) for the primary action on phones; inputs at 16px text on phones.",
+      "**Do** write copy in the coach voice: short, specific, numbers over adjectives (\"4 workouts, 5 meal days, 2,050 kcal\"), and say what happens next in every empty state and error.",
+      "**Do** pair every status colour with an icon and words, and every selection with a check or a number.",
+      "**Do** use `duration-(--dur-fast)` / `ease-out-quart` for transitions and check the reduced-motion alternative for anything that moves.",
+      "**Do** test every new screen at 390, 820 and 1440px, in light and dark, and tab through it."
+    ],
+    "donts": [
+      "**Don't** build the badge-heading-three-cards template: a pill badge, a centred headline, then three identical icon cards.",
+      "**Don't** write \"powered by AI\", add sparkle icons, or make claims that are not true (\"Join thousands\"). State facts: 250 workouts, 529 demo videos, 10 free credits.",
+      "**Don't** use photographs, stock gym images under a dark overlay, or illustrations of plans.",
+      "**Don't** put an icon in a tinted rounded square to open a card or feature.",
+      "**Don't** use `border-left` or `border-right` wider than 1px as a coloured accent on cards, list items or alerts.",
+      "**Don't** use gradient text (`background-clip: text`), glassmorphism, blurred translucent navs, or decorative gradients.",
+      "**Don't** use emerald, green or teal as brand colours, or a second chromatic accent beside vermilion.",
+      "**Don't** add a pricing section, tier names, \"upgrade\" wording or a `#pricing` link anywhere.",
+      "**Don't** use the condensed width for buttons, form labels, table text or body copy.",
+      "**Don't** use `#000` or `#fff`, or neutral greys without the warm tint.",
+      "**Don't** nest cards, give resting surfaces a shadow, or round anything into a pill (`rounded-full` is only for a spinner or a dot).",
+      "**Don't** animate layout properties (width, height, top, left), use bounce or elastic easing, or orchestrate page-load sequences inside `/dashboard`.",
+      "**Don't** use em dashes in copy; use a comma, colon, semicolon, period or parentheses.",
+      "**Don't** rely on colour alone for state, or on a tooltip for essential information.",
+      "**Don't** open a modal as a first thought; try inline expansion, a sheet or a toast first."
+    ]
+  }
+}

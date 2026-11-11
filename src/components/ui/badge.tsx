@@ -4,20 +4,27 @@ import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+/*
+ * A tag, not a pill: rectangular, uppercase label type. Status is never colour alone,
+ * so pair success/warning/destructive with an icon or a word that says what it is.
+ */
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-full border border-transparent px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden",
+  "inline-flex items-center justify-center rounded-md border border-transparent px-2 py-0.5 text-[0.6875rem] leading-4 font-bold uppercase tracking-wider w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none transition-colors duration-(--dur-fast) ease-out-quart overflow-hidden",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
+        default: "bg-foreground text-background [a&]:hover:bg-foreground/85",
+        signal: "bg-primary text-primary-foreground [a&]:hover:bg-primary-hover",
         secondary:
-          "bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
-        destructive:
-          "bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-secondary text-secondary-foreground [a&]:hover:bg-accent",
         outline:
-          "border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-        ghost: "[a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 [a&]:hover:underline",
+          "border-foreground text-foreground [a&]:hover:bg-accent",
+        destructive:
+          "bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90",
+        success: "border-success text-success",
+        warning: "border-warning text-warning",
+        ghost: "text-muted-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        link: "text-signal underline-offset-4 [a&]:hover:underline",
       },
     },
     defaultVariants: {

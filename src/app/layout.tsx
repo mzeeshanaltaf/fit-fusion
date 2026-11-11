@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Archivo } from "next/font/google";
 import Script from "next/script";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const umamiSrc = process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL;
 const umamiWebsiteId = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID;
 
-const geist = Geist({
-  variable: "--font-geist-sans",
+// Variable Archivo with the width axis: condensed + heavy for headlines and
+// numbers, normal width for reading. Weight (100-900) is variable by default.
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
+  axes: ["wdth"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -69,7 +73,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geist.variable} font-sans antialiased`}>
+      <body className={`${archivo.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -77,7 +81,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <Toaster richColors position="top-right" />
+          <Toaster position="top-right" />
         </ThemeProvider>
         {umamiSrc && umamiWebsiteId && (
           <Script
