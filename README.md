@@ -1,256 +1,131 @@
-# FitFusion — AI-Powered Fitness Plans
+# FitFusion — Workout and Nutrition Plans
 
-**Live app:** [https://fitfusion.zeeshanai.cloud](https://fitfusion.zeeshanai.cloud)
+**Live app:** [https://fitfusion.zeeshanai.cloud](https://fitfusion.zeeshanai.cloud) ·
+**API:** `https://api.fitfusion.zeeshanai.cloud` (docs at `/docs`)
 
-FitFusion is a full-stack SaaS application that generates personalized **workout plans** and **5-day nutrition plans** using AI. Users enter their profile, pick a fitness goal and training level, and receive a complete plan in under 60 seconds.
+FitFusion turns a profile and a goal into a workout plan and a 5-day nutrition plan. Workouts
+are picked from a library of 250 real sessions; calorie and macro targets are calculated in
+code and the AI writes meals that hit them. A plan takes about 30 seconds.
 
 ---
 
 ## Features
 
-- **Personalized Workout Plans** — Exercises, sets, reps, rest periods, and equipment per workout
-- **5-Day Nutrition Plans** — Breakfast, lunch, dinner, and snacks with full macro breakdowns (calories, protein, carbs, fat)
-- **Goal-Specific Training** — Fat Loss, Muscle Gain, Maintenance, Strength, Endurance
-- **Credit System** — 5 free credits on signup; 1 credit per plan generated
-- **Email OTP Verification** — 6-digit code required before an email/password account gets a session
-- **Password Reset** — Self-service "forgot password" via emailed OTP
-- **Dark Mode** — System, light, and dark theme support
-- **Profile Defaults** — Save your measurements once; the form pre-fills on every visit
+- **Workout plans** picked from the library by goal, level and available equipment
+- **5-day nutrition plans** with a macro breakdown per meal; diet preference and allergies are honoured
+- **Goal-specific training** — Fat loss, Muscle gain, Maintenance, Strength, Endurance
+- **Workout logging** — mark a workout done; see this week's sessions and your streak
+- **Swap a workout / regenerate a nutrition day** — 5 free edits per plan
+- **PDF export** of any plan
+- **10 free credits** at sign-up; one credit per plan, refunded automatically if generation fails
+- **Email OTP verification** and self-service password reset
+- **Light and dark themes**
 
 ---
 
-## Tech Stack
+## Architecture
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript 5 |
-| Styling | Tailwind CSS 4 |
-| UI | shadcn/ui + Radix UI |
-| Auth | Better Auth (email/password + Google, email OTP) |
-| Database | Postgres (`fit_fusion` schema) |
-| Transactional Email | Resend |
-| AI Backend | n8n workflows |
-| Notifications | Sonner |
-| Dark Mode | next-themes |
-| Analytics | Umami (self-hosted) |
+```
+Browser ──► Next.js (Better Auth: login, sessions, JWT)      fitfusion.zeeshanai.cloud
+   │
+   └──────► FastAPI (plans, credits, profile, logs, PDF)     api.fitfusion.zeeshanai.cloud
+                │
+                ▼
+             Postgres, schema fit_fusion (shared by both)
+```
+
+- **Frontend** (repo root): Next.js 16 App Router, React 19, TypeScript, Tailwind 4, shadcn/ui.
+- **Backend** (`backend/`): FastAPI, SQLAlchemy 2 async, Alembic, OpenAI Responses API, WeasyPrint.
+- **Auth:** Better Auth (email/password + Google) runs in Next.js. Its `jwt` plugin issues a
+  15-minute EdDSA token at `/api/auth/token`; the API verifies it against `/api/auth/jwks`.
+  The browser calls the API directly through `src/lib/api.ts`.
+- **n8n** is used only by the contact form.
+- Design: [PRODUCT.md](PRODUCT.md), [DESIGN.md](DESIGN.md) (chalk, ink and vermilion; Archivo).
 
 ---
 
-## Getting Started
+## Getting started
 
-### 1. Install dependencies
+### Frontend
 
 ```bash
 npm install
+cp .env.example .env.local     # fill in the values
+npm run dev                    # http://localhost:3000
+npm run build                  # production build; also the type-check gate
 ```
 
-### 2. Configure environment variables
-
-Copy `.env.example` to `.env.local` and fill in your values:
-
-```env
-# Better Auth — https://better-auth.com/
-BETTER_AUTH_SECRET=
-BETTER_AUTH_URL=http://localhost:3000
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-
-# Postgres (Better Auth tables live in the fit_fusion schema)
-DATABASE_URL=
-
-# Resend — delivers the auth OTP emails.
-# Leave RESEND_FROM_EMAIL UNQUOTED: dotenv strips quotes locally, but hosting
-# dashboards pass the raw string through and Resend then 422s on `from`.
-RESEND_API_KEY=
-RESEND_FROM_EMAIL=FitFusion <noreply@verification.zeeshanai.cloud>
-
-# n8n API key (sent as x-api-key header to all webhook calls)
-N8N_API_KEY=
-```
-
-See `.env.example` for the full list (contact webhook, Upstash, Umami).
-
-### 3. Run the development server
+### Backend
 
 ```bash
-npm run dev
+cd backend
+cp .env.example .env           # DATABASE_URL, OPENAI_API_KEY, JWT settings
+uv sync
+uv run alembic upgrade head    # applies the migrations to DATABASE_URL
+uv run uvicorn app.main:create_app --factory --reload --port 8000
+uv run pytest                  # DB-backed tests need TEST_DATABASE_URL, see backend/README.md
+uv run ruff check . && uv run ruff format --check .
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Set `NEXT_PUBLIC_API_URL` in `.env.local` to the API's address. After changing API schemas,
+run `npm run gen:types` to refresh `src/lib/api-schema.d.ts`.
+
+### Environment variables
+
+- Frontend: see [.env.example](.env.example). `NEXT_PUBLIC_*` values are inlined at **build** time.
+- Backend: see [backend/.env.example](backend/.env.example). The OpenAI service tier is
+  `default`; set `OPENAI_SERVICE_TIER=flex` (and optionally `OPENAI_FLEX_FALLBACK_TIER`)
+  for cheaper, slower runs.
 
 ---
 
-## Project Structure
+## Project structure
 
 ```
 src/
 ├── app/
-│   ├── (marketing)/          # Public landing page + legal pages
-│   │   ├── page.tsx          # Home — JSON-LD structured data, next/image hero
-│   │   ├── about/
-│   │   ├── contact/          # Contact form (honeypot + rate limit)
-│   │   ├── privacy/
-│   │   └── terms/
-│   ├── (auth)/               # Centered auth layout (noindex)
-│   │   ├── sign-in/
-│   │   ├── sign-up/
-│   │   ├── verify-email/     # 6-digit OTP entry (Suspense-wrapped)
-│   │   └── forgot-password/  # Request code → reset password
-│   ├── (dashboard)/          # Authenticated dashboard (noindex)
-│   │   ├── layout.tsx        # Wraps all dashboard pages; sets robots: noindex
-│   │   └── dashboard/
-│   │       ├── page.tsx      # Overview (stats, quick actions)
-│   │       ├── generate/     # Generate a new fitness plan
-│   │       ├── plans/        # List all plans
-│   │       │   └── [id]/     # Plan detail (workouts, nutrition, profile)
-│   │       ├── credits/      # Credit balance + transaction history
-│   │       └── settings/     # Save profile defaults to localStorage
-│   ├── api/
-│   │   ├── fitness/
-│   │   │   ├── generate/     # POST → n8n fitness-plan webhook
-│   │   │   ├── plans/        # GET → n8n get_fitness_plan webhook
-│   │   │   └── analytics/    # GET → n8n user_analytics webhook
-│   │   ├── credits/          # GET → n8n credit webhooks (?type=balance|history)
-│   │   ├── contact/          # POST → n8n contact webhook (honeypot + rate limit)
-│   │   └── auth/[...all]/    # Better Auth handler (sign-in/up, OAuth, session)
-│   ├── opengraph-image.tsx   # 1200×630 OG card (edge ImageResponse)
-│   ├── twitter-image.tsx     # 1200×630 Twitter card (edge ImageResponse)
-│   ├── icon.tsx              # 32×32 brand favicon (edge ImageResponse)
-│   ├── apple-icon.tsx        # 180×180 Apple touch icon (edge ImageResponse)
-│   ├── robots.ts             # Crawl rules — allows /, blocks /dashboard and /api
-│   ├── sitemap.ts            # Marketing routes with priority/changeFrequency
-│   ├── manifest.ts           # PWA web manifest
-│   └── globals.css           # Tailwind + teal/green primary color (OKLCH)
-├── components/
-│   ├── auth/
-│   │   ├── auth-form.tsx          # Sign-in / sign-up (shared)
-│   │   ├── verify-email-form.tsx
-│   │   ├── forgot-password-form.tsx
-│   │   ├── otp-field.tsx          # 6-box OTP input + spam-folder note
-│   │   ├── user-menu.tsx
-│   │   └── auth-cta.tsx
-│   ├── dashboard/
-│   │   ├── dashboard-context.tsx  # React Context — fetches & caches all dashboard data
-│   │   ├── sidebar.tsx
-│   │   └── top-nav.tsx
-│   ├── marketing/
-│   │   ├── navbar.tsx
-│   │   └── footer.tsx
-│   ├── ui/                   # shadcn/ui components
-│   ├── theme-provider.tsx
-│   └── theme-toggle.tsx
-├── hooks/
-│   └── use-cooldown.ts       # Resend-code countdown (mirrors server rate limit)
-└── lib/
-    ├── types.ts              # All TypeScript interfaces
-    ├── constants.ts          # n8n webhook URLs + form options
-    ├── auth.ts               # Better Auth server config (emailOTP plugin)
-    ├── auth-client.ts        # Better Auth React client
-    ├── email.ts              # Resend sender + OTP email template
-    └── n8n.ts               # Webhook client with auth + safe JSON parsing
+│   ├── (marketing)/      # /, /about, /contact, /privacy, /terms
+│   ├── (auth)/           # sign-in, sign-up, verify-email, forgot-password
+│   ├── (dashboard)/dashboard/   # overview, generate, plans, plans/[id], credits, settings
+│   └── api/              # auth/[...all] (Better Auth), contact (n8n webhook)
+├── components/           # auth/, dashboard/, marketing/, ui/ (shadcn primitives)
+└── lib/                  # api.ts (typed API client), auth.ts, api-schema.d.ts (generated)
+backend/
+├── app/                  # main.py, auth.py, config.py, models/, routers/, services/, schemas/
+├── alembic/              # migrations 0001-0004 (fit_fusion schema only)
+├── tests/
+└── Dockerfile
+docs/plan/                # the v2 implementation plan and HANDOFF.md (what was built, how it was verified)
 ```
 
 ---
 
-## Dashboard Pages
+## Deployment
 
-| Route | Description |
-|---|---|
-| `/dashboard` | Overview: plan count, credit balance, latest goal |
-| `/dashboard/generate` | Form to generate a new fitness plan (costs 1 credit) |
-| `/dashboard/plans` | All generated plans as cards |
-| `/dashboard/plans/[id]` | Plan detail with Workouts, Nutrition, and Profile tabs |
-| `/dashboard/credits` | Current balance + full transaction history |
-| `/dashboard/settings` | Save default profile values (pre-fills the generate form) |
+Both apps run on a Hostinger VPS through Coolify, behind Traefik with Let's Encrypt.
 
----
+| App | Coolify | Build | Domain |
+|---|---|---|---|
+| `fitfusion` | `rv7fj0mrik7ht0cy582bqxq8` | Railpack, port 3000 | `fitfusion.zeeshanai.cloud` |
+| `fitfusion-api` | `8oikgn4vwlgecjecsndqqtl5` | Dockerfile in `backend/`, port 8000, health `/health` | `api.fitfusion.zeeshanai.cloud` |
 
-## Authentication
-
-Better Auth handles sessions, Google OAuth, and email/password. Email verification and
-password reset run on the `emailOTP` plugin, with codes delivered by Resend.
-
-| Flow | Behaviour |
-|---|---|
-| Sign up (email/password) | Account is created but **no session is issued** — the user must enter a 6-digit code first |
-| Sign in, unverified account | Returns `EMAIL_NOT_VERIFIED`; a fresh code is sent automatically and the user is routed to `/verify-email` |
-| Verify code | Flips `emailVerified` **and signs the user in** (`autoSignInAfterVerification`) |
-| Forgot password | Emailed code → new password → redirect to `/sign-in` (reset does **not** create a session) |
-| Google sign-in | Arrives pre-verified; never sees the OTP flow |
-
-Codes are 6 digits, expire after 10 minutes, allow 3 attempts, and are **hashed at rest**.
-They are stored in Better Auth's existing `verification` table, so enabling this required
-**no database migration**.
-
-**Notes for maintainers**
-
-- `requestPasswordReset` returns success even for addresses with no account, and
-  re-registering an existing email returns a generic success. This is deliberate
-  anti-enumeration behaviour — keep the UI copy neutral.
-- Better Auth wraps the email sender in `runInBackgroundOrAwait`, so **send failures are
-  swallowed**: the endpoint still returns `{ success: true }` and the UI still says
-  "code sent". Never conclude email works from the UI — check the Resend dashboard.
-- Run the config preflight (validates the key, `from` format, verified domain, and
-  `<Toaster />` placement, sending only to Resend's sink address):
-
-  ```bash
-  node ~/.claude/skills/better-auth-email-otp/scripts/preflight.mjs --app-dir src/app
-  ```
+Every push to `main` runs `.github/workflows/deploy.yml`: the API deploys first and must report
+healthy, then the web app deploys. Repo secrets: `COOLIFY_API_TOKEN`, `COOLIFY_APP_UUID`
+(web), `COOLIFY_API_APP_UUID` (API). Database migrations are **not** run by the deploy; apply
+them by hand with `uv run alembic upgrade head` before shipping code that needs them.
 
 ---
 
-## n8n Backend
+## Authentication notes
 
-All API routes act as server-side proxies to n8n workflows. The `N8N_API_KEY` is never exposed to the client.
+Email verification and password reset use the Better Auth `emailOTP` plugin; codes are
+6 digits, expire after 10 minutes, allow 3 attempts and are delivered by Resend.
 
-| Event | Trigger | Purpose |
-|---|---|---|
-| `fitness-plan` | POST `/api/fitness/generate` | Generate workout + nutrition plan |
-| `get_fitness_plan` | GET `/api/fitness/plans` | Fetch all user plans |
-| `user_analytics` | GET `/api/fitness/analytics` | Total plan count |
-| `get_remaining_credit` | GET `/api/credits?type=balance` | Current credit balance |
-| `credit_history` | GET `/api/credits?type=history` | Transaction history |
-| `signup_credits` | Better Auth user-create hook | Assign 5 free credits |
-
----
-
-## Caching
-
-Dashboard data (plans, credit balance, transaction history, analytics) is fetched **once on mount** via `DashboardDataProvider` and shared across all pages through React Context. Webhooks are not called on every navigation — only on initial page load or after a successful plan generation.
-
----
-
-## Production Build
-
-```bash
-npm run build
-npm start
-```
-
----
-
-## SEO
-
-The marketing surface (`/`, `/about`, `/privacy`, `/terms`) is fully optimised for search and social sharing. The dashboard is auth-gated and explicitly excluded from indexing.
-
-| Feature | Implementation |
-|---|---|
-| Metadata | `metadataBase`, `title.template`, OG, Twitter, keywords in root `layout.tsx` |
-| Per-page titles & canonicals | `export const metadata` on each marketing page |
-| Dashboard exclusion | `robots: { index: false }` on `(dashboard)/layout.tsx` |
-| Crawl rules | `robots.ts` — allows `/`, disallows `/dashboard`, `/api` |
-| Sitemap | `sitemap.ts` — 4 marketing routes, auto-served at `/sitemap.xml` |
-| Structured data | JSON-LD `@graph` (Organization, WebSite, SoftwareApplication) on home page |
-| OG / Twitter images | Edge `ImageResponse` at `/opengraph-image` and `/twitter-image` (1200×630) |
-| Icons | Edge `ImageResponse` at `/icon` (32×32) and `/apple-icon` (180×180) |
-| PWA manifest | `manifest.ts` served at `/manifest.webmanifest` |
-| Hero image | `next/image` with `priority` and `fill` for optimal LCP |
-
-**Post-deploy verification:**
-- Rich Results Test: `https://search.google.com/test/rich-results`
-- OG preview: `https://www.opengraph.xyz/`
-- Submit sitemap in Google Search Console: `https://fitfusion.zeeshanai.cloud/sitemap.xml`
+- Email/password sign-up creates the account but issues **no session** until the code is entered.
+  Google accounts arrive verified.
+- Better Auth swallows email send failures, so the UI says "code sent" even when Resend is
+  broken. Check the Resend dashboard.
+- `requestPasswordReset` answers success for unknown addresses on purpose (anti-enumeration).
 
 ---
 
