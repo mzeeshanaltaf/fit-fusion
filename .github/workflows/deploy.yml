@@ -58,29 +58,21 @@ jobs:
             echo "::error::Could not trigger the API deploy."
             exit 1
           fi
-          echo "API deployment: $deployment"
+          echo "API deployment queued: $deployment"
+          # The deploy-scoped token cannot read deployment status, so wait on /health instead:
+          # Coolify sets SOURCE_COMMIT to the built commit and /health returns it, so the new
+          # version is live exactly when it equals this push's sha. The build takes minutes.
           for i in $(seq 1 60); do # up to 20 minutes
-            status=$(curl -sS --max-time 30 \
-              "${COOLIFY_URL}/api/v1/deployments/${deployment}" \
-              -H "Authorization: Bearer ${COOLIFY_API_TOKEN}" | jq -r '.status // "unknown"')
-            echo "poll $i: $status"
-            case "$status" in
-              finished) break ;;
-              failed | cancelled*) echo "::error::API deploy ended as $status"; exit 1 ;;
-            esac
+            body=$(curl -sS --max-time 15 "${API_HEALTH_URL}" || true)
+            commit=$(echo "$body" | jq -r '.commit // empty' 2>/dev/null || true)
+            echo "poll $i: commit=${commit:-none} (want ${GITHUB_SHA})"
+            if [ "$commit" = "${GITHUB_SHA}" ]; then
+              echo "API is serving the new commit."
+              exit 0
+            fi
             sleep 20
           done
-          if [ "$status" != "finished" ]; then
-            echo "::error::API deploy did not finish in time (last status: $status)."
-            exit 1
-          fi
-          for i in $(seq 1 12); do # up to 2 minutes for the new container to answer
-            code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 15 "${API_HEALTH_URL}" || echo "000")
-            echo "health $i -> HTTP $code"
-            [ "$code" = "200" ] && exit 0
-            sleep 10
-          done
-          echo "::error::API deployed but ${API_HEALTH_URL} is not healthy."
+          echo "::error::${API_HEALTH_URL} never reported commit ${GITHUB_SHA}."
           exit 1
 
   deploy-web:

@@ -31,9 +31,10 @@ async def test_health_ok_when_database_answers(
 ):
     engine = FakeEngine()
     monkeypatch.setattr(main, "get_engine", lambda: engine)
+    monkeypatch.setenv("SOURCE_COMMIT", "abc123")
     response = await client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "database": "ok"}
+    assert response.json() == {"status": "ok", "database": "ok", "commit": "abc123"}
     assert engine.connection.statements == ["SELECT 1"]
 
 

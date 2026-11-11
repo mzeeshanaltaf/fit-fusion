@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -56,7 +57,10 @@ async def health(_: Request) -> JSONResponse:
     except Exception:
         logger.exception("Health check: database unreachable")
         return JSONResponse({"status": "degraded", "database": "unavailable"}, status_code=503)
-    return JSONResponse({"status": "ok", "database": "ok"})
+    # SOURCE_COMMIT is set by Coolify at build time; CI waits for it to equal the pushed sha.
+    return JSONResponse(
+        {"status": "ok", "database": "ok", "commit": os.environ.get("SOURCE_COMMIT", "unknown")}
+    )
 
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
