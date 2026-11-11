@@ -2,73 +2,78 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 import {
-  Dumbbell,
-  LayoutDashboard,
   ClipboardPlus,
-  History,
   CreditCard,
+  History,
+  LayoutDashboard,
+  LifeBuoy,
   Settings,
-  HelpCircle,
 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { Wordmark } from "@/components/marketing/wordmark";
 
 const navItems = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/generate", label: "Generate Plan", icon: ClipboardPlus },
-  { href: "/dashboard/plans", label: "My Plans", icon: History },
+  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
+  { href: "/dashboard/generate", label: "Generate plan", icon: ClipboardPlus },
+  { href: "/dashboard/plans", label: "My plans", icon: History },
   { href: "/dashboard/credits", label: "Credits", icon: CreditCard },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
-];
+] as const;
 
-export function Sidebar() {
+const itemClass =
+  "flex h-10 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors duration-(--dur-fast) ease-out-quart";
+
+/** `onNavigate` lets the mobile sheet close itself when a link is followed. */
+export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-full w-60 flex-col border-r border-border bg-background">
-      {/* Logo */}
-      <div className="flex h-16 items-center gap-2 px-4">
-        <Dumbbell className="h-6 w-6 text-primary" />
-        <span className="text-base font-bold">FitFusion</span>
+    <div className="flex h-full flex-col bg-background">
+      <div className="flex h-16 shrink-0 items-center border-b border-border px-4">
+        <Wordmark href="/dashboard" />
       </div>
 
-      <Separator />
-
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <ul className="space-y-1">
-          {navItems.map(({ href, label, icon: Icon }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  pathname === href
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-              </Link>
-            </li>
-          ))}
+      <nav aria-label="Dashboard" className="flex-1 overflow-y-auto px-3 py-4">
+        <ul className="grid gap-1">
+          {navItems.map((item) => {
+            const { href, label, icon: Icon } = item;
+            const exact = "exact" in item && item.exact;
+            const active = exact
+              ? pathname === href
+              : pathname === href || pathname.startsWith(`${href}/`);
+            return (
+              <li key={href}>
+                <Link
+                  href={href}
+                  onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    itemClass,
+                    active
+                      ? "bg-foreground text-background"
+                      : "text-foreground hover:bg-accent"
+                  )}
+                >
+                  <Icon aria-hidden className="size-4" />
+                  {label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 
-      <Separator />
-
-      {/* Help */}
-      <div className="px-3 py-4">
+      <div className="shrink-0 border-t border-border px-3 py-4">
         <Link
-          href="#"
-          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          href="/contact"
+          onClick={onNavigate}
+          className={cn(itemClass, "text-muted-foreground hover:bg-accent hover:text-foreground")}
         >
-          <HelpCircle className="h-4 w-4" />
-          Help & Support
+          <LifeBuoy aria-hidden className="size-4" />
+          Help and contact
         </Link>
       </div>
-    </aside>
+    </div>
   );
 }

@@ -1,120 +1,173 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CreditCard, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Stat } from "@/components/ui/stat";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { LoadError } from "@/components/dashboard/load-error";
+import { PageHeader, Section } from "@/components/dashboard/page-header";
 import { useDashboardData } from "@/components/dashboard/dashboard-context";
+import { api, ApiError } from "@/lib/api";
+import { DEFAULT_EDIT_LIMIT } from "@/lib/constants";
+import { formatDateTime, TRANSACTION_LABELS } from "@/lib/format";
+import type { CreditTransaction } from "@/lib/types";
+
+const PAGE_SIZE = 20;
 
 export default function CreditsPage() {
-  const {
-    creditBalance: balance,
-    creditHistory: history,
-    loading,
-  } = useDashboardData();
+  const { creditBalance, loading: balanceLoading } = useDashboardData();
+  const [items, setItems] = useState<CreditTransaction[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Credits</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Your credit balance and transaction history.
-          </p>
-        </div>
-        <Skeleton className="h-32 w-full rounded-xl" />
-        <Skeleton className="h-64 w-full rounded-xl" />
-      </div>
-    );
+  async function load(offset: number) {
+    try {
+      const page = await api.creditHistory(PAGE_SIZE, offset);
+      setItems((prev) => (offset === 0 ? page.items : [...prev, ...page.items]));
+      setTotal(page.total);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof ApiError ? err : new ApiError(0, "Could not load your history."));
+    }
+  }
+
+  useEffect(() => {
+    void load(0).finally(() => setLoading(false));
+  }, []);
+
+  async function showMore() {
+    setLoadingMore(true);
+    await load(items.length);
+    setLoadingMore(false);
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Credits</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Your credit balance and transaction history.
-        </p>
+    <div className="grid gap-10">
+      <PageHeader
+        title="Credits"
+        description={`A plan costs 1 credit, and a failed plan is refunded. Swapping a workout or regenerating a meal day is free, up to ${DEFAULT_EDIT_LIMIT} edits per plan.`}
+        action={
+          <Button asChild size="lg" className="w-full sm:w-auto">
+            <Link href="/dashboard/generate">Generate plan</Link>
+          </Button>
+        }
+      />
+
+      <div className="border-t-2 border-foreground pt-4">
+        {balanceLoading ? (
+          <div className="grid gap-3">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-24 w-40" />
+          </div>
+        ) : (
+          <Stat
+            size="xl"
+            label="Balance"
+            value={creditBalance}
+            unit={creditBalance === 1 ? "credit" : "credits"}
+            hint={
+              creditBalance === 0
+                ? "Your plans, PDFs and logs stay available."
+                : `${creditBalance} more plan${creditBalance === 1 ? "" : "s"} you can generate.`
+            }
+          />
+        )}
       </div>
 
-      {/* Balance card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Current Balance
-          </CardTitle>
-          <CreditCard className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-4xl font-bold">{balance}</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            credits remaining
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Transaction history */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {history.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              No transactions yet.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {history.map((tx) => {
-                const isPositive = tx.credits_delta > 0;
-                return (
-                  <div
-                    key={tx.transaction_id}
-                    className="flex items-center justify-between rounded-lg border border-border/50 p-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                          isPositive
-                            ? "bg-emerald-500/10 text-emerald-600"
-                            : "bg-red-500/10 text-red-600"
-                        }`}
-                      >
-                        {isPositive ? (
-                          <ArrowUpRight className="h-4 w-4" />
-                        ) : (
-                          <ArrowDownRight className="h-4 w-4" />
+      <Section title="History">
+        {loading ? (
+          <div className="grid gap-3" aria-busy="true" aria-label="Loading your credit history">
+            {Array.from({ length: 4 }, (_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : error && items.length === 0 ? (
+          <LoadError
+            error={error}
+            what="your credit history"
+            onRetry={() => {
+              setLoading(true);
+              void load(0).finally(() => setLoading(false));
+            }}
+          />
+        ) : items.length === 0 ? (
+          <EmptyState
+            title="Nothing here yet"
+            description="Every credit you receive or spend is listed here, with the date. Generate a plan and the first row appears."
+          />
+        ) : (
+          <div className="grid gap-4">
+            <Table aria-label="Credit history" className="min-w-[32rem]">
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>What</TableHead>
+                  <TableHead>When</TableHead>
+                  <TableHead numeric>Credits</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((tx) => {
+                  const label = TRANSACTION_LABELS[tx.transaction_type] ?? tx.transaction_type;
+                  // Edits are logged with 0 credits: show a dash, never "+0".
+                  const delta = tx.credits_delta;
+                  return (
+                    <TableRow key={tx.transaction_id}>
+                      <TableCell>
+                        <span className="font-semibold">{label}</span>
+                        {tx.name_snapshot && (
+                          <span className="t-small block text-muted-foreground">
+                            {tx.name_snapshot.replace(/_/g, " ")}
+                          </span>
                         )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          {tx.description}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(tx.created_at).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge
-                      variant={isPositive ? "secondary" : "destructive"}
-                      className="font-mono"
-                    >
-                      {isPositive ? "+" : ""}
-                      {tx.credits_delta}
-                    </Badge>
-                  </div>
-                );
-              })}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">
+                        {formatDateTime(tx.created_at)}
+                      </TableCell>
+                      <TableCell numeric>
+                        {delta === 0 ? (
+                          <>
+                            <span aria-hidden>-</span>
+                            <span className="sr-only">no credits</span>
+                          </>
+                        ) : delta > 0 ? (
+                          `+${delta}`
+                        ) : (
+                          // A real minus sign, not a hyphen, so it lines up with the plus.
+                          `−${Math.abs(delta)}`
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="t-small text-muted-foreground">
+                Showing <span className="t-num font-semibold">{items.length}</span> of{" "}
+                <span className="t-num font-semibold">{total}</span>
+              </p>
+              {items.length < total && (
+                <Button variant="outline" onClick={showMore} loading={loadingMore}>
+                  Show more
+                </Button>
+              )}
             </div>
-          )}
-        </CardContent>
-      </Card>
+            {error && <LoadError error={error} what="more history" />}
+          </div>
+        )}
+      </Section>
     </div>
   );
 }

@@ -15,16 +15,15 @@ export default function DashboardLayout({
 }) {
   return (
     <DashboardDataProvider>
-      <div className="flex h-screen overflow-hidden">
-        {/* Desktop sidebar */}
-        <div className="hidden md:flex">
+      <div className="min-h-screen lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
+        {/* Desktop side nav; below lg it lives in a sheet inside TopNav. */}
+        <aside className="sticky top-0 hidden h-screen border-r border-border lg:block">
           <Sidebar />
-        </div>
+        </aside>
 
-        {/* Main content area */}
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-col">
           <TopNav />
-          <main className="flex-1 overflow-y-auto bg-muted/30 p-6">
+          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
             {children}
           </main>
         </div>

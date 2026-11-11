@@ -1,10 +1,7 @@
 import { betterAuth } from "better-auth";
 import { emailOTP, jwt } from "better-auth/plugins";
 import { Pool } from "pg";
-import { callN8nWebhook } from "@/lib/n8n";
-import { N8N_WEBHOOKS } from "@/lib/constants";
 import { sendOtpEmail } from "@/lib/email";
-import type { SignupCreditsResponse } from "@/lib/types";
 
 /**
  * Better Auth server configuration.
@@ -91,22 +88,6 @@ export const auth = betterAuth({
   advanced: {
     useSecureCookies: process.env.NODE_ENV === "production",
   },
-  databaseHooks: {
-    user: {
-      create: {
-        // Assign signup credits via n8n on registration — replaces the
-        // former Clerk `user.created` webhook.
-        after: async (user) => {
-          try {
-            await callN8nWebhook<SignupCreditsResponse>(N8N_WEBHOOKS.CREDITS, {
-              event_type: "signup_credits",
-              user_id: user.id,
-            });
-          } catch (error) {
-            console.error("Failed to assign signup credits:", error);
-          }
-        },
-      },
-    },
-  },
+  // Signup credits are NOT granted here. The FastAPI backend grants SIGNUP_CREDITS
+  // once, on a verified user's first request (a missing credit account = never granted).
 });

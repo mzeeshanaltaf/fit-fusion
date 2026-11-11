@@ -8,7 +8,7 @@ workout + 5-day nutrition plan. Live at `https://fitfusion.zeeshanai.cloud`.
 - **Next.js 16.1.6** (App Router, Turbopack), **React 19**, **TypeScript 5**
 - **Tailwind CSS 4** + **shadcn/ui** (Radix via the `radix-ui` package)
 - **Better Auth** (email/password + Google) — auth in the `fit_fusion` Postgres schema
-- **n8n** webhooks for all business logic (no ORM; the app has no DB models of its own)
+- **FastAPI backend** (`backend/`, see its README and `docs/plan/`) for plans, credits, profile, logs and PDF; the browser calls it directly. **n8n** is left only for the contact form. (The app has no DB models of its own.)
 - `next-themes` (dark mode), `sonner` (toasts), `motion` (animation)
 - Package manager: **npm**. Path alias: `@/*` → `src/*`.
 
@@ -34,17 +34,20 @@ Routes live under `src/app/` with route groups (groups don't affect URLs):
   `plans/[id]`, `credits`, `settings`. `(dashboard)/layout.tsx` sets `noindex`.
 - `api/` — route handlers (see below).
 
-**Business logic is entirely in n8n.** API routes are thin server-side proxies that
-call n8n webhooks via `callN8nWebhook()` in [src/lib/n8n.ts](src/lib/n8n.ts), passing
-the `x-api-key: N8N_API_KEY` header. Webhook URLs are in
-[src/lib/constants.ts](src/lib/constants.ts) (`N8N_WEBHOOKS`). The **user id** (Better
-Auth `session.user.id`) is the join key for all user data in the n8n/Postgres backend.
+**Business logic is in the FastAPI backend.** The dashboard talks to it only through
+[src/lib/api.ts](src/lib/api.ts): it fetches a 15-min JWT from `/api/auth/token`, caches it
+until about 1 min before expiry, retries once on 401, and calls `NEXT_PUBLIC_API_URL`
+(`/v1/...`). Types come from the backend OpenAPI: `npm run gen:types` rewrites
+`src/lib/api-schema.d.ts` (generated, committed; needs `uv`); `src/lib/types.ts` only
+aliases it. Always send the browser's local date (`localDate()`) for `today` and
+`performed_on`. Shared dashboard data (credits, overview, progress) lives in
+[dashboard-context.tsx](src/components/dashboard/dashboard-context.tsx); other screens fetch
+through `useAsync` (`src/lib/use-async.ts`). The **user id** (Better Auth `session.user.id`)
+is the JWT `sub`.
 
 ### API routes
 
 - `api/auth/[...all]` — Better Auth handler (`toNextJsHandler`).
-- `api/fitness/generate` (POST) — session-guarded; calls the fitness-plan webhook.
-- `api/user-data` (GET) — session-guarded; fetches plans/credits.
 - `api/contact` (POST) — honeypot + rate limit → n8n contact webhook.
 
 ## Auth (Better Auth)
@@ -72,10 +75,11 @@ Auth `session.user.id`) is the join key for all user data in the n8n/Postgres ba
 - **`jwt` plugin** (for the FastAPI backend in `backend/`, see its README and
   `docs/plan/`): `/api/auth/token` issues a 15-min EdDSA JWT (`sub` = user id,
   `email_verified`; issuer = audience = `BETTER_AUTH_URL`), `/api/auth/jwks` publishes
-  the keys. Needs the `jwks` table (already created by the CLI migration). The backend
-  is not wired into the UI yet.
-- Signup credits: a `databaseHooks.user.create.after` hook calls the n8n credits
-  webhook (`signup_credits`) — this replaced the old Clerk webhook.
+  the keys. Needs the `jwks` table (already created by the CLI migration). The dashboard
+  calls the backend through `src/lib/api.ts`.
+- Signup credits: **not** granted here. The FastAPI backend grants `SIGNUP_CREDITS` (10) once,
+  on a verified user's first request. Do not add a sign-up hook that creates a credit account,
+  or the backend will treat the user as already granted.
 - **Protection:** [src/middleware.ts](src/middleware.ts) guards `/dashboard/:path*` with
   an optimistic `getSessionCookie` check; API routes re-validate via
   `auth.api.getSession({ headers: await headers() })`.
@@ -109,7 +113,8 @@ Secrets live in `.env.local` (gitignored); see `.env.example` for the full list.
 
 - `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 - `DATABASE_URL` (Postgres; Better Auth uses the `fit_fusion` schema)
-- `N8N_WEBHOOK_BASE_URL`, `N8N_API_KEY`, `N8N_CONTACT_WEBHOOK_URL`
+- `NEXT_PUBLIC_API_URL` (FastAPI base URL, no `/v1`; **build time**; the API's `CORS_ORIGINS` must list this app's origin)
+- `N8N_API_KEY`, `N8N_CONTACT_WEBHOOK_URL` (contact form only)
 - `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (server-only, **runtime**; never `NEXT_PUBLIC_*`)
 - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
 - `NEXT_PUBLIC_UMAMI_SCRIPT_URL`, `NEXT_PUBLIC_UMAMI_WEBSITE_ID`
@@ -122,7 +127,7 @@ Secrets live in `.env.local` (gitignored); see `.env.example` for the full list.
   `lucide-react`; follow [DESIGN.md](DESIGN.md) (chalk / ink / vermilion, Archivo, flat and
   ruled) and [PRODUCT.md](PRODUCT.md). Tokens live in `src/app/globals.css`; use semantic
   tokens (`bg-card`, `text-muted-foreground`, `border-input`), never raw colours, and no `emerald-*`.
-- New n8n calls should go through `callN8nWebhook` + a constant in `constants.ts`.
+- New data calls go through `api` in `src/lib/api.ts` (add a typed helper); never call the API with a bare `fetch`.
 
 ## Deployment
 

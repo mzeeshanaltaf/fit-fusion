@@ -2,24 +2,29 @@
 
 import {
   createContext,
-  useContext,
-  useState,
-  useEffect,
   useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
   type ReactNode,
 } from "react";
-import type {
-  FitnessPlan,
-  CreditTransaction,
-  UserDataResponse,
-} from "@/lib/types";
+import { api, ApiError } from "@/lib/api";
+import type { OverviewResponse, ProgressResponse } from "@/lib/types";
 
+/**
+ * Data every dashboard screen shares: the overview (credit balance, plan count, newest
+ * plans, any running job) and this week's progress. Screens that need more (the full
+ * plan list, credit history, one plan) fetch it themselves through `api`.
+ */
 interface DashboardData {
-  plans: FitnessPlan[];
+  overview: OverviewResponse | null;
+  progress: ProgressResponse | null;
   creditBalance: number;
-  creditHistory: CreditTransaction[];
-  totalPlans: string;
+  /** True until the first overview has loaded. */
   loading: boolean;
+  /** Set when the overview could not be loaded; screens show a retry. */
+  error: ApiError | null;
   refresh: () => Promise<void>;
 }
 
@@ -33,55 +38,51 @@ export function useDashboardData() {
   return ctx;
 }
 
-async function safeFetch<T>(url: string, fallback: T): Promise<T> {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return fallback;
-    return await res.json();
-  } catch {
-    return fallback;
-  }
-}
-
 export function DashboardDataProvider({ children }: { children: ReactNode }) {
-  const [plans, setPlans] = useState<FitnessPlan[]>([]);
-  const [creditBalance, setCreditBalance] = useState(0);
-  const [creditHistory, setCreditHistory] = useState<CreditTransaction[]>([]);
-  const [totalPlans, setTotalPlans] = useState("0");
+  const [overview, setOverview] = useState<OverviewResponse | null>(null);
+  const [progress, setProgress] = useState<ProgressResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<ApiError | null>(null);
 
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    const data = await safeFetch<UserDataResponse>("/api/user-data", {
-      fitness_plans: [],
-      total_fitness_plan: "0",
-      current_balance: 0,
-      credit_history: [],
-    });
-
-    setPlans(Array.isArray(data.fitness_plans) ? data.fitness_plans : []);
-    setCreditBalance(data.current_balance ?? 0);
-    setCreditHistory(Array.isArray(data.credit_history) ? data.credit_history : []);
-    setTotalPlans(data.total_fitness_plan ?? "0");
+  const refresh = useCallback(async () => {
+    // Progress is secondary: a failure there must not hide the overview.
+    const [ov, pr] = await Promise.allSettled([api.overview(), api.progress()]);
+    if (ov.status === "fulfilled") {
+      setOverview(ov.value);
+      setError(null);
+    } else {
+      const err =
+        ov.reason instanceof ApiError
+          ? ov.reason
+          : new ApiError(0, "Could not load your data.");
+      setError(err);
+    }
+    if (pr.status === "fulfilled") setProgress(pr.value);
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    void refresh();
+  }, [refresh]);
+
+  // The session is gone (expired, signed out in another tab): back to sign-in.
+  useEffect(() => {
+    if (error?.status === 401) window.location.assign("/sign-in");
+  }, [error]);
+
+  const value = useMemo<DashboardData>(
+    () => ({
+      overview,
+      progress,
+      creditBalance: overview?.current_balance ?? 0,
+      loading,
+      error,
+      refresh,
+    }),
+    [overview, progress, loading, error, refresh]
+  );
 
   return (
-    <DashboardContext.Provider
-      value={{
-        plans,
-        creditBalance,
-        creditHistory,
-        totalPlans,
-        loading,
-        refresh: fetchAll,
-      }}
-    >
-      {children}
-    </DashboardContext.Provider>
+    <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>
   );
 }

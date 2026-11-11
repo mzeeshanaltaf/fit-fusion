@@ -1,324 +1,414 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { ArrowLeftIcon, DownloadIcon, Trash2Icon } from "lucide-react";
+import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ArrowLeft,
-  Clock,
-  Dumbbell,
-  Apple,
-  User,
-  Calendar,
-} from "lucide-react";
-import type { DayNutrition } from "@/lib/types";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Stat } from "@/components/ui/stat";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LoadError } from "@/components/dashboard/load-error";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { useDashboardData } from "@/components/dashboard/dashboard-context";
-import { YouTubePlayerDialog } from "@/components/dashboard/youtube-player-dialog";
+import { NutritionDay } from "@/components/dashboard/plan/nutrition-day";
+import { WorkoutSheet } from "@/components/dashboard/plan/workout-sheet";
+import { api, ApiError, localDate } from "@/lib/api";
+import {
+  dietLabel,
+  formatDate,
+  formatNumber,
+  genderLabel,
+  goalLabel,
+  levelLabel,
+  planTitle,
+  sentence,
+} from "@/lib/format";
+import { useAsync } from "@/lib/use-async";
+import type { LogOut, PlanDetail } from "@/lib/types";
 
-function extractYouTubeId(url: string): string | null {
-  try {
-    const u = new URL(url);
-    if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2];
-    if (u.hostname === "youtu.be") return u.pathname.slice(1);
-    return u.searchParams.get("v");
-  } catch {
-    return null;
-  }
+type EditKey = `swap-${number}` | `day-${number}`;
+
+const DAYS = [1, 2, 3, 4, 5] as const;
+
+function PlanSkeleton() {
+  return (
+    <div className="grid gap-8" aria-busy="true" aria-label="Loading your plan">
+      <div className="grid gap-3">
+        <Skeleton className="h-9 w-72 max-w-full" />
+        <Skeleton className="h-4 w-56" />
+      </div>
+      <div className="grid grid-cols-2 gap-6 sm:grid-cols-5">
+        {Array.from({ length: 5 }, (_, i) => (
+          <div key={i} className="grid gap-2">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-8 w-20" />
+          </div>
+        ))}
+      </div>
+      <Skeleton className="h-10 w-64" />
+      <Skeleton className="h-64 w-full" />
+    </div>
+  );
 }
 
-function safeNumber(val: number | string): number {
-  const n = Number(val);
-  return isNaN(n) ? 0 : n;
+async function saveBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
 export default function PlanDetailPage() {
-  const params = useParams();
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { plans, loading } = useDashboardData();
-  const plan = useMemo(
-    () => plans.find((p) => p.id === params.id) ?? null,
-    [plans, params.id]
-  );
+  const { refresh } = useDashboardData();
 
-  if (loading) {
+  const plan = useAsync((s) => api.getPlan(id, s), id);
+  const logs = useAsync((s) => api.planLogs(id, s), id);
+
+  // `confirming` is the edit the user is about to commit; `busy` is the one running.
+  const [confirming, setConfirming] = useState<EditKey | null>(null);
+  const [busy, setBusy] = useState<EditKey | null>(null);
+  const [editError, setEditError] = useState<ApiError | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  if (plan.loading) return <PlanSkeleton />;
+
+  if (plan.error?.status === 404 || plan.error?.status === 422) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-96 w-full rounded-xl" />
+      <div className="grid gap-8">
+        <PageHeader title="Plan not found" />
+        <EmptyState
+          title="This plan is gone"
+          description="It was deleted, or the link is wrong. Your other plans are in My plans."
+        >
+          <Button asChild>
+            <Link href="/dashboard/plans">Open my plans</Link>
+          </Button>
+        </EmptyState>
+      </div>
+    );
+  }
+  if (plan.error || !plan.data) {
+    return (
+      <div className="grid gap-8">
+        <PageHeader title="Plan" />
+        <LoadError
+          error={plan.error ?? new ApiError(0, "Something went wrong.")}
+          onRetry={plan.reload}
+          what="this plan"
+        />
       </div>
     );
   }
 
-  if (!plan) {
-    return (
-      <div className="flex flex-col items-center py-20 text-center">
-        <Dumbbell className="mb-4 h-12 w-12 text-muted-foreground/50" />
-        <h2 className="mb-2 text-lg font-semibold">Plan not found</h2>
-        <p className="mb-6 text-sm text-muted-foreground">
-          This fitness plan does not exist or has been removed.
-        </p>
-        <Button variant="outline" onClick={() => router.push("/dashboard/plans")}>
-          Back to Plans
-        </Button>
-      </div>
-    );
+  const p: PlanDetail = plan.data;
+  const workouts = p.workout_plan.data;
+  const editLimit = p.edit_limit;
+  const editsLeft = Math.max(0, editLimit - p.edit_count);
+  const logItems: LogOut[] = logs.data?.items ?? [];
+  const today = localDate();
+  const hasTargets = p.target_calories !== null;
+
+  // ─── Workout logs ───────────────────────────────────────────────
+  async function toggleDone(index: number, done: boolean) {
+    const previous = logs.data;
+    const day = localDate();
+    if (done) {
+      const temp: LogOut = {
+        id: `pending-${index}`,
+        plan_id: id,
+        workout_index: index,
+        performed_on: day,
+        notes: null,
+        created_at: new Date().toISOString(),
+      };
+      logs.setData((prev) => ({ items: [temp, ...(prev?.items ?? [])] }));
+    } else {
+      logs.setData((prev) => ({
+        items: (prev?.items ?? []).filter(
+          (l) => !(l.workout_index === index && l.performed_on === day)
+        ),
+      }));
+    }
+    try {
+      if (done) await api.logWorkout(id, index, day);
+      else await api.unlogWorkout(id, index, day);
+      void logs.reload();
+      void refresh(); // overview streak and week
+    } catch (err) {
+      logs.setData(previous);
+      toast.error(err instanceof ApiError ? err.message : "Could not save that. Try again.");
+    }
   }
 
-  const nutritionDays = Object.entries(plan.nutrition_plan).sort(
-    ([a], [b]) => a.localeCompare(b)
-  );
+  // ─── Edits (swap, regenerate day) ───────────────────────────────
+  async function runEdit(
+    key: EditKey,
+    call: () => Promise<PlanDetail>,
+    message: (before: PlanDetail, after: PlanDetail) => string
+  ) {
+    setBusy(key);
+    setEditError(null);
+    try {
+      const next = await call();
+      plan.setData(next);
+      setConfirming(null);
+      toast.success(message(p, next));
+      void refresh();
+    } catch (err) {
+      const error = err instanceof ApiError ? err : new ApiError(0, "Something went wrong.");
+      setEditError(error);
+      setConfirming(null);
+      // The plan changed under us, or the budget is spent: show the real numbers.
+      if (error.code === "plan_changed" || error.code === "edit_limit_reached") {
+        void plan.reload();
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const swap = (index: number) =>
+    runEdit(
+      `swap-${index}`,
+      () => api.swapWorkout(id, index),
+      (before, after) => {
+        const left = Math.max(0, after.edit_limit - after.edit_count);
+        return `Swapped ${before.workout_plan.data[index]?.workout_name} for ${after.workout_plan.data[index]?.workout_name}. ${left} of ${after.edit_limit} edits left.`;
+      }
+    );
+
+  const regenerate = (day: number) =>
+    runEdit(
+      `day-${day}`,
+      () => api.regenerateDay(id, day),
+      (_before, after) =>
+        `Day ${day} has new meals. ${Math.max(0, after.edit_limit - after.edit_count)} of ${after.edit_limit} edits left.`
+    );
+
+  // ─── PDF and delete ─────────────────────────────────────────────
+  async function downloadPdf() {
+    setDownloading(true);
+    try {
+      const { blob, filename } = await api.planPdf(id);
+      await saveBlob(blob, filename);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Could not make the PDF. Try again.");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
+  async function deletePlan() {
+    setDeleting(true);
+    try {
+      await api.deletePlan(id);
+      toast.success("Plan deleted.");
+      void refresh();
+      router.push("/dashboard/plans");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Could not delete the plan. Try again.");
+      setDeleting(false);
+    }
+  }
+
+  const editBusy = busy !== null;
+  const planProfile: [string, string][] = [
+    ["Age", `${p.age}`],
+    ["Gender", genderLabel(p.gender)],
+    ["Weight", `${p.weight_kg} kg`],
+    ["Height", `${p.height_cm} cm`],
+    ["Goal", goalLabel(p.fitness_goal)],
+    ["Level", levelLabel(p.training_level)],
+    ["Days a week", `${p.days_per_week}`],
+    ["Diet", dietLabel(p.diet_preference)],
+    ["Avoids", p.allergies.length ? p.allergies.map(sentence).join(", ") : "Nothing listed"],
+    [
+      "Equipment",
+      p.equipment.length ? p.equipment.map(sentence).join(", ") : "Any equipment",
+    ],
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mb-2 gap-1.5"
-            onClick={() => router.push("/dashboard/plans")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Plans
-          </Button>
-          <h1 className="text-2xl font-bold capitalize tracking-tight">
-            {plan.fitness_goal.replace("_", " ")} Plan
-          </h1>
-          <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5" />
-            {new Date(plan.created_at).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Badge variant="secondary" className="capitalize">
-            {plan.training_level}
-          </Badge>
-          <Badge variant="outline">
-            {plan.workout_plan.data.length} workouts
-          </Badge>
-        </div>
+    <div className="grid gap-8">
+      <div>
+        <Button asChild variant="ghost" size="sm" className="-ml-3 mb-3">
+          <Link href="/dashboard/plans">
+            <ArrowLeftIcon aria-hidden />
+            All plans
+          </Link>
+        </Button>
+        <PageHeader
+          title={planTitle(p)}
+          description={`Made ${formatDate(p.created_at)}. ${workouts.length} workout${workouts.length === 1 ? "" : "s"}, 5 meal days.`}
+          action={
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={downloadPdf} loading={downloading}>
+                <DownloadIcon aria-hidden />
+                Download PDF
+              </Button>
+              <Button variant="outline" onClick={() => setDeleteOpen(true)}>
+                <Trash2Icon aria-hidden />
+                Delete
+              </Button>
+            </div>
+          }
+        />
       </div>
 
-      {/* Tabs */}
+      <div className="grid grid-cols-2 gap-x-6 gap-y-6 border-t-2 border-foreground pt-4 sm:grid-cols-3 lg:grid-cols-5">
+        {hasTargets && (
+          <>
+            <Stat size="sm" label="Calories" value={formatNumber(p.target_calories ?? 0)} unit="kcal" />
+            <Stat size="sm" label="Protein" value={p.target_protein_g ?? 0} unit="g" />
+            <Stat size="sm" label="Carbs" value={p.target_carbs_g ?? 0} unit="g" />
+            <Stat size="sm" label="Fat" value={p.target_fat_g ?? 0} unit="g" />
+          </>
+        )}
+        <Stat
+          size="sm"
+          label="Edits left"
+          value={editsLeft}
+          unit={`of ${editLimit}`}
+          hint={editsLeft === 0 ? "None left on this plan" : "Swaps and meal days"}
+        />
+      </div>
+
+      {workouts.length < p.days_per_week && (
+        <Alert variant="warning">
+          <AlertTitle>
+            {workouts.length} workout{workouts.length === 1 ? "" : "s"}, not {p.days_per_week}
+          </AlertTitle>
+          <AlertDescription>
+            Only {workouts.length} workout{workouts.length === 1 ? "" : "s"} in the library fit your
+            goal, level and equipment. More equipment, or a different goal, gives you more days.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {editError && (
+        <Alert variant="destructive">
+          <AlertTitle>
+            {editError.code === "edit_limit_reached" ? "No edits left" : "That change did not happen"}
+          </AlertTitle>
+          <AlertDescription>
+            {editError.message} Nothing was changed and no edit was used.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {busy && (
+        <p role="status" className="t-small font-semibold">
+          {busy.startsWith("swap") ? "Finding a new workout" : "Writing new meals"}. This takes 10
+          to 30 seconds. Keep this page open.
+        </p>
+      )}
+
       <Tabs defaultValue="workouts">
-        <TabsList>
-          <TabsTrigger value="workouts" className="gap-1.5">
-            <Dumbbell className="h-3.5 w-3.5" />
-            Workouts
-          </TabsTrigger>
-          <TabsTrigger value="nutrition" className="gap-1.5">
-            <Apple className="h-3.5 w-3.5" />
-            Nutrition
-          </TabsTrigger>
-          <TabsTrigger value="profile" className="gap-1.5">
-            <User className="h-3.5 w-3.5" />
-            Profile
-          </TabsTrigger>
+        <TabsList aria-label="Plan sections">
+          <TabsTrigger value="workouts">Workouts</TabsTrigger>
+          <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
         </TabsList>
 
-        {/* Workouts Tab */}
-        <TabsContent value="workouts" className="space-y-4">
-          {plan.workout_plan.data.map((workout) => (
-            <Card key={workout.workout_id}>
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-lg">
-                      {workout.workout_name}
-                    </CardTitle>
-                    <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-3.5 w-3.5" />
-                      {workout.workout_detail.duration_minutes} min
-                    </div>
-                  </div>
-                  <Badge className="capitalize">
-                    {workout.workout_category}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Exercises */}
-                <div className="grid gap-4">
-                  {workout.workout_detail.exercises.map((ex) => {
-                    const videoId = ex.youtube_video_id
-                      ? extractYouTubeId(ex.youtube_video_id)
-                      : null;
-                    return (
-                      <div
-                        key={ex.exercise_slug}
-                        className="rounded-lg border border-border/50 p-4"
-                      >
-                        <div className="flex flex-col gap-4 sm:flex-row">
-                          {/* Video embed */}
-                          {videoId && (
-                            <YouTubePlayerDialog
-                              videoId={videoId}
-                              exerciseName={ex.exercise_name}
-                            />
-                          )}
-
-                          {/* Exercise details */}
-                          <div className="flex-1 space-y-2">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-medium">{ex.exercise_name}</h4>
-                            </div>
-                            <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-                              <span>
-                                <span className="font-medium text-foreground">{ex.sets}</span> sets
-                              </span>
-                              <span>
-                                <span className="font-medium text-foreground">{ex.reps}</span> reps
-                              </span>
-                              <span>
-                                <span className="font-medium text-foreground">{ex.rest_seconds}s</span> rest
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Equipment */}
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="text-xs text-muted-foreground">
-                    Equipment:
-                  </span>
-                  {workout.workout_detail.equipment_needed.map((eq) => (
-                    <Badge key={eq} variant="outline" className="text-xs capitalize">
-                      {eq}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
-
-        {/* Nutrition Tab */}
-        <TabsContent value="nutrition" className="space-y-4">
-          {nutritionDays.map(([dayKey, day]) => {
-            const dayNutrition = day as DayNutrition;
-            const dayNum = dayKey.replace("day_", "");
-            const meals = [
-              { label: "Breakfast", data: dayNutrition.breakfast },
-              { label: "Lunch", data: dayNutrition.lunch },
-              { label: "Dinner", data: dayNutrition.dinner },
-              ...dayNutrition.snacks.map((s, i) => ({
-                label: `Snack ${dayNutrition.snacks.length > 1 ? i + 1 : ""}`.trim(),
-                data: s,
-              })),
-            ];
-
-            const totalCals = meals.reduce(
-              (sum, m) => sum + safeNumber(m.data.calories),
-              0
-            );
-            const totalProtein = meals.reduce(
-              (sum, m) => sum + safeNumber(m.data.protein_g),
-              0
-            );
-            const totalCarbs = meals.reduce(
-              (sum, m) => sum + safeNumber(m.data.carbs_g),
-              0
-            );
-            const totalFat = meals.reduce(
-              (sum, m) => sum + safeNumber(m.data.fat_g),
-              0
-            );
-
+        <TabsContent value="workouts" className="mt-4 grid gap-10">
+          {workouts.map((w, i) => {
+            const mine = logItems.filter((l) => l.workout_index === i);
+            const past = mine.filter((l) => l.performed_on !== today).map((l) => l.performed_on);
             return (
-              <Card key={dayKey}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Day {dayNum}</CardTitle>
-                    <div className="flex gap-2 text-xs">
-                      <Badge variant="outline">{totalCals} cal</Badge>
-                      <Badge variant="outline">{totalProtein}g protein</Badge>
-                      <Badge variant="outline">{totalCarbs}g carbs</Badge>
-                      <Badge variant="outline">{totalFat}g fat</Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {meals.map(({ label, data }) => (
-                    <div
-                      key={label}
-                      className="rounded-lg border border-border/50 p-3"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-medium">{label}</p>
-                          <p className="mt-0.5 text-sm text-muted-foreground">
-                            {data.meal}
-                          </p>
-                        </div>
-                        <div className="flex shrink-0 gap-1.5 text-xs text-muted-foreground">
-                          <span>{safeNumber(data.calories)} cal</span>
-                          <span>·</span>
-                          <span>P {safeNumber(data.protein_g)}g</span>
-                          <span>·</span>
-                          <span>C {safeNumber(data.carbs_g)}g</span>
-                          <span>·</span>
-                          <span>F {safeNumber(data.fat_g)}g</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+              <WorkoutSheet
+                key={`${w.workout_id}-${i}`}
+                workout={w}
+                index={i}
+                doneToday={mine.some((l) => l.performed_on === today)}
+                lastDone={past.length ? past.sort().at(-1)! : null}
+                onToggleDone={(done) => void toggleDone(i, done)}
+                editsLeft={editsLeft}
+                editLimit={editLimit}
+                editBusy={editBusy}
+                swapping={busy === `swap-${i}`}
+                confirming={confirming === `swap-${i}`}
+                onAskSwap={() => setConfirming(`swap-${i}`)}
+                onCancelSwap={() => setConfirming(null)}
+                onConfirmSwap={() => void swap(i)}
+              />
             );
           })}
         </TabsContent>
 
-        {/* Profile Tab */}
-        <TabsContent value="profile">
-          <Card>
-            <CardHeader>
-              <CardTitle>Plan Profile</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid gap-4 sm:grid-cols-2">
-                {[
-                  { label: "Age", value: `${plan.age} years` },
-                  { label: "Gender", value: plan.gender },
-                  { label: "Weight", value: `${plan.weight_kg} kg` },
-                  { label: "Height", value: `${plan.height_cm} cm` },
-                  {
-                    label: "Fitness Goal",
-                    value: plan.fitness_goal.replace("_", " "),
-                  },
-                  { label: "Training Level", value: plan.training_level },
-                ].map(({ label, value }) => (
-                  <div key={label} className="rounded-lg border border-border/50 p-3">
-                    <dt className="text-xs font-medium text-muted-foreground">
-                      {label}
-                    </dt>
-                    <dd className="mt-0.5 text-sm font-medium capitalize">
-                      {value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </CardContent>
-          </Card>
+        <TabsContent value="nutrition" className="mt-4 grid gap-10">
+          {DAYS.map((d) => (
+            <NutritionDay
+              key={d}
+              day={d}
+              data={p.nutrition_plan[`day_${d}` as const]}
+              editsLeft={editsLeft}
+              editLimit={editLimit}
+              editBusy={editBusy}
+              regenerating={busy === `day-${d}`}
+              confirming={confirming === `day-${d}`}
+              onAskRegenerate={() => setConfirming(`day-${d}`)}
+              onCancel={() => setConfirming(null)}
+              onConfirm={() => void regenerate(d)}
+            />
+          ))}
+        </TabsContent>
+
+        <TabsContent value="profile" className="mt-4">
+          <div className="border-t-2 border-foreground">
+            <dl className="grid sm:grid-cols-2 sm:gap-x-10">
+              {planProfile.map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex items-baseline justify-between gap-4 border-b border-border py-3"
+                >
+                  <dt className="t-label text-muted-foreground">{label}</dt>
+                  <dd className="t-num text-right text-sm font-semibold">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={deleteOpen} onOpenChange={(o) => !deleting && setDeleteOpen(o)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="t-heading">Delete this plan?</DialogTitle>
+            <DialogDescription>
+              The plan and the workouts you logged against it are deleted for good. The credit it
+              cost is not refunded.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+              Keep plan
+            </Button>
+            <Button variant="destructive" onClick={deletePlan} loading={deleting}>
+              Delete plan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

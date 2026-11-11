@@ -46,7 +46,7 @@ function Stat({
         {unit ? (
           <span
             data-slot="stat-unit"
-            className="wdth-100 text-[0.32em] font-semibold tracking-normal text-muted-foreground"
+            className="wdth-100 text-[max(0.875rem,0.32em)] font-semibold tracking-normal text-muted-foreground"
           >
             {unit}
           </span>

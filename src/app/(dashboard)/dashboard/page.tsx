@@ -1,134 +1,261 @@
 "use client";
 
-import { useSession } from "@/lib/auth-client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { Dumbbell, CreditCard, TrendingUp, ArrowRight } from "lucide-react";
+import { CheckIcon, MinusIcon } from "lucide-react";
+import { useSession } from "@/lib/auth-client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Stat } from "@/components/ui/stat";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { LoadError } from "@/components/dashboard/load-error";
+import { PageHeader, Section } from "@/components/dashboard/page-header";
 import { useDashboardData } from "@/components/dashboard/dashboard-context";
+import { api } from "@/lib/api";
+import { formatDate, planTitle } from "@/lib/format";
+import { useAsync } from "@/lib/use-async";
+import { cn } from "@/lib/utils";
+import type { ProgressResponse } from "@/lib/types";
+
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+function WeekStrip({ progress }: { progress: ProgressResponse }) {
+  return (
+    <ol className="grid grid-cols-7 gap-1.5 sm:gap-2" aria-label="This week, Monday to Sunday">
+      {progress.week.days.map((d, i) => {
+        const isToday = d.date === progress.today;
+        const done = d.sessions > 0;
+        const dayNumber = Number(d.date.slice(8, 10));
+        return (
+          <li
+            key={d.date}
+            aria-current={isToday ? "date" : undefined}
+            className={cn(
+              "flex min-h-24 flex-col justify-between rounded-md border p-2 sm:p-3",
+              done ? "border-foreground bg-foreground text-background" : "border-border bg-card",
+              isToday && !done && "border-2 border-foreground"
+            )}
+          >
+            <div className="t-label flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-1">
+              <span>{WEEKDAYS[i]}</span>
+              <span className="t-num font-semibold">{dayNumber}</span>
+            </div>
+            <p className="t-num flex items-center gap-1 text-xl font-bold">
+              {done ? (
+                <>
+                  <CheckIcon aria-hidden className="size-4" strokeWidth={3} />
+                  <span>{d.sessions}</span>
+                  <span className="sr-only">
+                    {d.sessions === 1 ? "session" : "sessions"} on {d.date}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <MinusIcon aria-hidden className="size-4 text-muted-foreground" />
+                  <span className="sr-only">No session on {d.date}</span>
+                </>
+              )}
+            </p>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function OverviewSkeleton() {
+  return (
+    <div className="grid gap-8" aria-busy="true" aria-label="Loading your overview">
+      <div className="grid gap-3">
+        <Skeleton className="h-9 w-56" />
+        <Skeleton className="h-4 w-80 max-w-full" />
+      </div>
+      <div className="grid gap-8 sm:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="grid gap-3">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-12 w-28" />
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-2">
+        {Array.from({ length: 7 }, (_, i) => (
+          <Skeleton key={i} className="h-24" />
+        ))}
+      </div>
+      <Skeleton className="h-48 w-full" />
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const firstName = session?.user?.name?.trim().split(/\s+/)[0] ?? "there";
-  const { plans, totalPlans, creditBalance, loading } = useDashboardData();
+  const { overview, progress, creditBalance, loading, error, refresh } = useDashboardData();
+  const firstName = session?.user?.name?.trim().split(/\s+/)[0];
 
-  const latestPlan = plans.length
-    ? [...plans].sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      )[0]
-    : null;
-  const latestGoal = latestPlan
-    ? latestPlan.fitness_goal
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase())
-    : "---";
+  const latest = overview?.recent_plans[0] ?? null;
+  const logs = useAsync(
+    async (signal) => (latest ? api.planLogs(latest.id, signal) : { items: [] }),
+    latest?.id ?? "none"
+  );
 
-  const stats = [
-    { label: "Plans Generated", value: totalPlans, icon: Dumbbell },
-    { label: "Credits Remaining", value: String(creditBalance), icon: CreditCard },
-    { label: "Latest Goal", value: latestGoal, icon: TrendingUp },
-  ];
-
-  const hasPlans = Number(totalPlans) > 0;
-
-  if (loading) {
+  if (loading) return <OverviewSkeleton />;
+  if (error && !overview) {
     return (
-      <div className="space-y-6">
-        <div>
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="mt-2 h-4 w-96" />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-xl" />
-          ))}
-        </div>
-        <Skeleton className="h-64 rounded-xl" />
+      <div className="grid gap-8">
+        <PageHeader title="Overview" />
+        <LoadError error={error} onRetry={refresh} what="your overview" />
       </div>
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Welcome back, {firstName}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Here is an overview of your fitness plan activity.
-        </p>
-      </div>
+  const week = progress?.week;
+  const weekStart = week?.start ?? "";
+  const weekEnd = week?.end ?? "";
+  const doneThisWeek = new Set(
+    (logs.data?.items ?? [])
+      .filter((l) => l.performed_on >= weekStart && l.performed_on <= weekEnd)
+      .map((l) => l.workout_index)
+  );
+  const hasPlans = (overview?.total_plans ?? 0) > 0;
+  const activeJob = overview?.active_job;
+  const target = week?.target_days ?? null;
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        {stats.map(({ label, value, icon: Icon }) => (
-          <Card key={label}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {label}
-              </CardTitle>
-              <Icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{value}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+  return (
+    <div className="grid gap-10">
+      <PageHeader
+        title="Overview"
+        description={
+          firstName
+            ? `Hi ${firstName}. Here is your week.`
+            : "Here is your week."
+        }
+        action={
+          <Button asChild size="lg" className="w-full sm:w-auto">
+            <Link href="/dashboard/generate">Generate plan</Link>
+          </Button>
+        }
+      />
+
+      {activeJob && (activeJob.status === "queued" || activeJob.status === "running") && (
+        <Alert variant="info">
+          <AlertTitle>A plan is being built</AlertTitle>
+          <AlertDescription>
+            It takes about 30 seconds.{" "}
+            <Link href="/dashboard/generate" className="font-semibold text-foreground underline">
+              Watch it finish
+            </Link>
+            .
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Section title="This week" aside={week ? `${formatDate(week.start)} to ${formatDate(week.end)}` : undefined}>
+        <div className="grid gap-8 sm:grid-cols-3">
+          <Stat
+            label="Sessions"
+            value={week?.sessions ?? 0}
+            unit={target ? `of ${target}` : undefined}
+            hint={
+              target
+                ? `${week?.active_days ?? 0} active day${week?.active_days === 1 ? "" : "s"}`
+                : "Log a workout from a plan"
+            }
+          />
+          <Stat
+            label="Streak"
+            value={progress?.streak_weeks ?? 0}
+            unit={progress?.streak_weeks === 1 ? "week" : "weeks"}
+            hint={`${progress?.streak_days ?? 0} day${progress?.streak_days === 1 ? "" : "s"} in a row`}
+          />
+          <Stat
+            label="Credits"
+            value={creditBalance}
+            hint={
+              <Link href="/dashboard/credits" className="underline underline-offset-4">
+                1 credit per plan
+              </Link>
+            }
+          />
+        </div>
+        {progress && (
+          <div className="mt-6">
+            <WeekStrip progress={progress} />
+          </div>
+        )}
+      </Section>
 
       {!hasPlans ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center py-14 text-center">
-            <Dumbbell className="mb-4 h-12 w-12 text-muted-foreground/50" />
-            <h3 className="mb-2 text-lg font-semibold">
-              Generate your first fitness plan
-            </h3>
-            <p className="mb-6 max-w-sm text-sm text-muted-foreground">
-              Enter your profile details and fitness goal to get a personalized
-              workout routine and 5-day nutrition plan.
-            </p>
-            <Button asChild className="gap-2">
-              <Link href="/dashboard/generate">
-                Create Plan <ArrowRight className="h-4 w-4" />
+        <EmptyState
+          title="No plans yet"
+          description={`A plan takes about 30 seconds and costs 1 credit. You have ${creditBalance} credit${creditBalance === 1 ? "" : "s"}.`}
+        >
+          <Button asChild>
+            <Link href="/dashboard/generate">Generate your first plan</Link>
+          </Button>
+        </EmptyState>
+      ) : latest ? (
+        <Section
+          title="Latest plan"
+          aside={
+            <>
+              {formatDate(latest.created_at)} ·{" "}
+              <Link href="/dashboard/plans" className="underline underline-offset-4">
+                All {overview?.total_plans} plans
               </Link>
+            </>
+          }
+        >
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h3 className="t-heading">{planTitle(latest)}</h3>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/dashboard/plans/${latest.id}`}>Open plan</Link>
             </Button>
-            <Badge variant="secondary" className="mt-4">
-              {creditBalance} credits available
-            </Badge>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card>
-            <CardContent className="flex flex-col items-center py-8 text-center">
-              <h3 className="mb-2 font-semibold">Generate New Plan</h3>
-              <p className="mb-4 text-sm text-muted-foreground">
-                Create another personalized fitness plan.
-              </p>
-              <Button asChild className="gap-2">
-                <Link href="/dashboard/generate">
-                  Generate <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="flex flex-col items-center py-8 text-center">
-              <h3 className="mb-2 font-semibold">View Plans</h3>
-              <p className="mb-4 text-sm text-muted-foreground">
-                Browse your previously generated fitness plans.
-              </p>
-              <Button asChild variant="outline" className="gap-2">
-                <Link href="/dashboard/plans">
-                  View All <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+          </div>
+          <Table aria-label="Workouts in your latest plan, and whether you did them this week">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Workout</TableHead>
+                <TableHead numeric>This week</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {latest.workout_names.map((name, i) => (
+                <TableRow key={`${name}-${i}`}>
+                  <TableCell className="font-semibold">
+                    <Link
+                      href={`/dashboard/plans/${latest.id}`}
+                      className="underline-offset-4 hover:underline"
+                    >
+                      {name}
+                    </Link>
+                  </TableCell>
+                  <TableCell numeric>
+                    {logs.loading ? (
+                      <Skeleton className="ml-auto h-4 w-12" />
+                    ) : doneThisWeek.has(i) ? (
+                      <span className="inline-flex items-center justify-end gap-1">
+                        <CheckIcon aria-hidden className="size-4 text-success" strokeWidth={3} />
+                        Done
+                      </span>
+                    ) : (
+                      <span className="font-normal text-muted-foreground">To do</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Section>
+      ) : null}
     </div>
   );
 }

@@ -1,263 +1,254 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { ClipboardPlus } from "lucide-react";
 import { toast } from "sonner";
-import { Dumbbell } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { PlanFields } from "@/components/dashboard/plan-fields";
+import { JobProgress } from "@/components/dashboard/job-progress";
 import {
-  FITNESS_GOALS,
-  TRAINING_LEVELS,
-  GENDER_OPTIONS,
-} from "@/lib/constants";
+  emptyForm,
+  formFromProfile,
+  toGenerateRequest,
+  toProfileUpdate,
+  validatePlanForm,
+  type FormErrors,
+  type PlanFormState,
+} from "@/components/dashboard/plan-form";
 import { useDashboardData } from "@/components/dashboard/dashboard-context";
-import { PlanGenerationDialog } from "@/components/dashboard/plan-generation-dialog";
+import { api, ApiError } from "@/lib/api";
+import { useAsync } from "@/lib/use-async";
+import type { JobResponse } from "@/lib/types";
 
-const PROFILE_STORAGE_KEY = "fitfusion-profile-defaults";
+const POLL_MS = 2000;
+const MAX_POLL_FAILURES = 6;
 
-interface ProfileDefaults {
-  age: string;
-  weight_kg: string;
-  height_cm: string;
-  gender: string;
-}
+const isActive = (j: JobResponse | null) =>
+  !!j && (j.status === "queued" || j.status === "running");
 
 export default function GeneratePlanPage() {
   const router = useRouter();
-  const { creditBalance, refresh } = useDashboardData();
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    age: "",
-    weight_kg: "",
-    height_cm: "",
-    gender: "",
-    fitness_goal: "",
-    training_level: "",
-  });
+  const { overview, creditBalance, loading: dashLoading, refresh } = useDashboardData();
 
+  const profile = useAsync((s) => api.getProfile(s), "profile");
+  const equipment = useAsync((s) => api.equipment(s), "equipment");
+
+  const [form, setForm] = useState<PlanFormState>(emptyForm);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [outOfCredits, setOutOfCredits] = useState(false);
+  const [job, setJob] = useState<JobResponse | null>(null);
+  const [pollError, setPollError] = useState<string | null>(null);
+
+  // Pre-fill once from the saved profile (never overwrite what the user is typing).
+  const prefilled = useRef(false);
   useEffect(() => {
-    // Load profile defaults from localStorage
-    try {
-      const saved = localStorage.getItem(PROFILE_STORAGE_KEY);
-      if (saved) {
-        const defaults: ProfileDefaults = JSON.parse(saved);
-        setForm((prev) => ({
-          ...prev,
-          age: defaults.age || prev.age,
-          weight_kg: defaults.weight_kg || prev.weight_kg,
-          height_cm: defaults.height_cm || prev.height_cm,
-          gender: defaults.gender || prev.gender,
-        }));
-      }
-    } catch {
-      // ignore parse errors
+    if (profile.data && !prefilled.current) {
+      prefilled.current = true;
+      setForm(formFromProfile(profile.data));
     }
-  }, []);
+  }, [profile.data]);
 
-  function updateField(field: string, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  }
+  // A job that was started before a reload or from another page: pick up where it is.
+  const resumed = useRef(false);
+  useEffect(() => {
+    if (!resumed.current && overview?.active_job) {
+      resumed.current = true;
+      setJob((current) => current ?? overview.active_job);
+    }
+  }, [overview]);
+
+  // Poll the job until it reaches a final state.
+  const jobId = job?.id;
+  const active = isActive(job);
+  useEffect(() => {
+    if (!jobId || !active) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    let failures = 0;
+
+    const tick = async () => {
+      try {
+        const next = await api.getJob(jobId);
+        if (cancelled) return;
+        failures = 0;
+        setJob(next);
+        if (next.status === "succeeded" || next.status === "failed") return;
+      } catch (err) {
+        if (cancelled) return;
+        failures += 1;
+        const gone = err instanceof ApiError && err.status === 404;
+        if (gone || failures >= MAX_POLL_FAILURES) {
+          setPollError(
+            "Lost contact with the server. Your plan may still be on its way: check My plans in a minute."
+          );
+          return;
+        }
+      }
+      timer = setTimeout(tick, POLL_MS);
+    };
+
+    timer = setTimeout(tick, 1500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [jobId, active]);
+
+  // React to the final state exactly once per job.
+  const handled = useRef<string | null>(null);
+  useEffect(() => {
+    if (!job || handled.current === job.id) return;
+    if (job.status === "succeeded" && job.plan_id) {
+      handled.current = job.id;
+      void refresh();
+      toast.success("Your plan is ready.");
+      router.push(`/dashboard/plans/${job.plan_id}`);
+    } else if (job.status === "failed") {
+      handled.current = job.id;
+      void refresh(); // the credit was refunded
+    }
+  }, [job, refresh, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submitting || active) return;
 
-    if (creditBalance <= 0) {
-      toast.error("No credits remaining. Please upgrade your plan.");
+    const found = validatePlanForm(form, true);
+    setErrors(found);
+    setSubmitError(null);
+    if (Object.keys(found).length > 0) {
+      // Move focus to the first problem so a keyboard or phone user sees it.
+      requestAnimationFrame(() =>
+        document.querySelector<HTMLElement>('[aria-invalid="true"], [data-slot="field-error"]')?.scrollIntoView({
+          block: "center",
+        })
+      );
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
     try {
-      const res = await fetch("/api/fitness/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Generation failed");
-
-      toast.success("Fitness plan generated successfully!");
-      await refresh();
-      router.push("/dashboard/plans");
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Something went wrong";
-      toast.error(message);
+      const started = await api.generatePlan(toGenerateRequest(form));
+      handled.current = null;
+      setPollError(null);
+      setJob(started);
+      void refresh(); // the credit is reserved right away
+      // Remember the answers for next time. Best effort: the plan matters more.
+      api.saveProfile(toProfileUpdate(form)).catch(() => {});
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 402) {
+        setOutOfCredits(true);
+        void refresh();
+      } else {
+        setSubmitError(
+          err instanceof ApiError ? err.message : "Something went wrong. Try again."
+        );
+      }
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   }
 
-  const isFormValid =
-    form.age &&
-    form.weight_kg &&
-    form.height_cm &&
-    form.gender &&
-    form.fitness_goal &&
-    form.training_level;
+  const failed = job?.status === "failed";
+  const noCredits = outOfCredits || (!dashLoading && creditBalance <= 0 && !active);
+  const formReady = !profile.loading || profile.error !== null;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Generate Fitness Plan
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Enter your profile and goals to generate a personalized workout and
-          nutrition plan.
-        </p>
-      </div>
+    <div className="grid gap-8">
+      <PageHeader
+        title="Generate plan"
+        description="Tell us about you. You get a workout plan from 250 real workouts and five days of meals with calorie and macro targets. A plan costs 1 credit; if it fails, the credit comes back."
+      />
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Dumbbell className="h-5 w-5" />
-                Your Profile
-              </CardTitle>
-              <CardDescription className="mt-1">
-                Fill in your details below. All fields are required.
-              </CardDescription>
-            </div>
-            <Badge variant="secondary">
-              {creditBalance} credit{creditBalance !== 1 ? "s" : ""} remaining
-            </Badge>
+      {noCredits ? (
+        <EmptyState
+          title="No credits left"
+          description="Each plan costs 1 credit and you have none. Your existing plans, PDFs and workout logs stay available."
+        >
+          <Button asChild>
+            <Link href="/dashboard/plans">Open my plans</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/dashboard/credits">See credit history</Link>
+          </Button>
+        </EmptyState>
+      ) : !formReady ? (
+        <div className="grid gap-6" aria-busy="true" aria-label="Loading your saved details">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} noValidate className="grid max-w-3xl gap-8">
+          <div
+            className="grid gap-8 aria-disabled:pointer-events-none aria-disabled:opacity-60"
+            aria-disabled={active || undefined}
+            inert={active || undefined}
+          >
+            <PlanFields
+              value={form}
+              onChange={setForm}
+              errors={errors}
+              equipmentOptions={equipment.data?.equipment ?? null}
+              equipmentFailed={equipment.error !== null}
+            />
           </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Physical profile */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="age">Age</Label>
-                <Input
-                  id="age"
-                  type="number"
-                  placeholder="e.g. 30"
-                  min={10}
-                  max={100}
-                  value={form.age}
-                  onChange={(e) => updateField("age", e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="gender">Gender</Label>
-                <Select
-                  key={form.gender || "unset"}
-                  value={form.gender || undefined}
-                  onValueChange={(v) => updateField("gender", v)}
-                >
-                  <SelectTrigger id="gender">
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GENDER_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="weight">Weight (kg)</Label>
-                <Input
-                  id="weight"
-                  type="number"
-                  placeholder="e.g. 75"
-                  min={20}
-                  max={300}
-                  value={form.weight_kg}
-                  onChange={(e) => updateField("weight_kg", e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="height">Height (cm)</Label>
-                <Input
-                  id="height"
-                  type="number"
-                  placeholder="e.g. 175"
-                  min={100}
-                  max={250}
-                  value={form.height_cm}
-                  onChange={(e) => updateField("height_cm", e.target.value)}
-                />
-              </div>
+
+          {submitError && (
+            <Alert variant="destructive">
+              <AlertTitle>The plan could not start</AlertTitle>
+              <AlertDescription>{submitError}</AlertDescription>
+            </Alert>
+          )}
+
+          {failed && job && (
+            <Alert variant="destructive">
+              <AlertTitle>The plan failed</AlertTitle>
+              <AlertDescription>
+                {job.error ?? "Something went wrong. Your credit was refunded."}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {pollError && (
+            <Alert variant="warning">
+              <AlertTitle>Still working?</AlertTitle>
+              <AlertDescription>{pollError}</AlertDescription>
+            </Alert>
+          )}
+
+          {active && job ? (
+            <JobProgress job={job} />
+          ) : (
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-t-2 border-foreground pt-4">
+              <Button
+                type="submit"
+                size="lg"
+                loading={submitting}
+                className="w-full sm:w-auto"
+              >
+                <ClipboardPlus aria-hidden />
+                {failed ? "Try again" : "Generate plan"}
+              </Button>
+              <p className="t-small text-muted-foreground">
+                Costs 1 credit. You have{" "}
+                <Link href="/dashboard/credits" className="t-num font-semibold text-foreground underline underline-offset-4">
+                  {creditBalance}
+                </Link>
+                .
+              </p>
             </div>
-
-            {/* Fitness settings */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="goal">Fitness Goal</Label>
-                <Select
-                  value={form.fitness_goal}
-                  onValueChange={(v) => updateField("fitness_goal", v)}
-                >
-                  <SelectTrigger id="goal">
-                    <SelectValue placeholder="Select a goal" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FITNESS_GOALS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="level">Training Level</Label>
-                <Select
-                  value={form.training_level}
-                  onValueChange={(v) => updateField("training_level", v)}
-                >
-                  <SelectTrigger id="level">
-                    <SelectValue placeholder="Select level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TRAINING_LEVELS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading || !isFormValid}
-              className="w-full gap-2 sm:w-auto"
-            >
-              <>
-                <Dumbbell className="h-4 w-4" />
-                Generate Plan
-              </>
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <PlanGenerationDialog open={loading} />
+          )}
+        </form>
+      )}
     </div>
   );
 }
