@@ -37,7 +37,8 @@ class UserCreditAccount(Base):
 
 
 class UserCreditTransaction(Base):
-    """Append-only credit ledger. ``credits_delta`` is never zero."""
+    """Append-only credit ledger. ``credits_delta`` is never zero, except for the free
+    ``swap`` and ``regenerate`` edit rows (cost 0)."""
 
     __tablename__ = "user_credit_transactions"
 
@@ -57,7 +58,10 @@ class UserCreditTransaction(Base):
     created_at: Mapped[datetime | None] = mapped_column(server_default=func.now())
 
     __table_args__ = (
-        CheckConstraint("credits_delta <> 0", name="user_credit_transactions_credits_delta_check"),
+        CheckConstraint(
+            "credits_delta <> 0 OR transaction_type IN ('swap','regenerate')",
+            name="user_credit_transactions_credits_delta_check",
+        ),
         CheckConstraint(
             "transaction_type IN (" + ",".join(f"'{t}'" for t in TRANSACTION_TYPES) + ")",
             name="user_credit_transactions_transaction_type_check",

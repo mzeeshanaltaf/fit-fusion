@@ -5,11 +5,12 @@ every change is mirrored by a ``user_credit_transactions`` row, written in the s
 transaction. Functions here never commit: the caller owns the transaction, so a reservation
 commits together with the job that holds it.
 
-Transaction types in use: ``signup_bonus``, ``fitness_plan_generation`` (reserve, -1) and
-``refund`` (+1). ``swap``/``regenerate`` are reserved for Phase 3 and unused so far.
+Transaction types in use: ``signup_bonus``, ``fitness_plan_generation`` (reserve, -1),
+``refund`` (+1) and the free plan edits ``swap`` / ``regenerate`` (delta 0, migration 0004).
 """
 
 import uuid
+from typing import Literal
 
 from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -139,6 +140,28 @@ async def refund(
     )
     await session.flush()
     return True
+
+
+async def record_edit(
+    session: AsyncSession,
+    *,
+    user_id: str,
+    kind: Literal["swap", "regenerate"],
+    plan_id: uuid.UUID,
+    name_snapshot: str,
+) -> None:
+    """Write the free (delta 0) ledger row for a plan edit. The caller commits."""
+    session.add(
+        UserCreditTransaction(
+            user_id=user_id,
+            transaction_type=kind,
+            credits_delta=0,
+            reference_id=plan_id,
+            name_snapshot=name_snapshot,
+            description="Workout swap" if kind == "swap" else "Nutrition day regenerated",
+        )
+    )
+    await session.flush()
 
 
 async def list_history(

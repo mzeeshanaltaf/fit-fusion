@@ -49,6 +49,9 @@ class Settings(BaseSettings):
     openai_timeout_seconds: int = 900
     # Tier to retry on when flex has no capacity (e.g. "auto"). Empty = no retry.
     openai_flex_fallback_tier: str = ""
+    # Swap / regenerate run inside the HTTP request (no job), so they get a shorter deadline
+    # than a generation job. On timeout nothing is changed and no edit is used.
+    edit_timeout_seconds: int = 120
 
     @field_validator("database_url")
     @classmethod

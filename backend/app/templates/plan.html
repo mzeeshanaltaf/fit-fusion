@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ title }}</title>
+<style>
+  /* Athletic editorial: chalk paper, ink type, one vermilion accent. */
+  :root { --ink: #16161a; --chalk: #f6f3ec; --rule: #d9d4c7; --muted: #6b675d; --accent: #d9391b; }
+  @page {
+    size: A4;
+    margin: 16mm 14mm 18mm 14mm;
+    background: var(--chalk);
+    @bottom-left { content: "FitFusion"; font: 700 8pt "Archivo", "DejaVu Sans", sans-serif; color: var(--muted); }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 8pt "Archivo", "DejaVu Sans", sans-serif; color: var(--muted); }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--ink); font: 9.5pt/1.4 "Archivo", "DejaVu Sans", sans-serif; }
+  h1, h2, h3 { margin: 0; line-height: 1.1; }
+  .brand { font-weight: 800; letter-spacing: .08em; text-transform: uppercase; font-size: 9pt; color: var(--accent); }
+  h1 { font-size: 24pt; font-weight: 800; margin-top: 3mm; text-transform: capitalize; }
+  .sub { color: var(--muted); margin-top: 2mm; }
+  .stats { display: flex; gap: 0; margin: 7mm 0 2mm; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule); }
+  .stat { flex: 1; padding: 3mm 0; }
+  .stat + .stat { padding-left: 4mm; border-left: 1px solid var(--rule); }
+  .stat b { display: block; font-size: 16pt; font-weight: 800; }
+  .stat span { font-size: 7.5pt; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .profile { margin: 4mm 0 0; color: var(--muted); font-size: 8.5pt; }
+  .profile strong { color: var(--ink); }
+  h2 { font-size: 13pt; font-weight: 800; margin: 9mm 0 3mm; padding-bottom: 1.5mm; border-bottom: 2px solid var(--ink); text-transform: uppercase; letter-spacing: .04em; }
+  h2 em { font-style: normal; color: var(--accent); }
+  .block { margin-bottom: 6mm; break-inside: avoid; }
+  h3 { font-size: 11pt; font-weight: 700; margin-bottom: 1mm; }
+  .meta { color: var(--muted); font-size: 8.5pt; margin-bottom: 2mm; }
+  table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  th { text-align: left; font-size: 7.5pt; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--ink); padding: 1.2mm 2mm 1.2mm 0; }
+  td { border-bottom: 1px solid var(--rule); padding: 1.6mm 2mm 1.6mm 0; vertical-align: top; }
+  th.n, td.n { text-align: right; white-space: nowrap; padding-right: 0; padding-left: 2mm; }
+  tr { break-inside: avoid; }
+  tfoot td { border-bottom: 0; border-top: 2px solid var(--ink); font-weight: 700; }
+  .slot { font-weight: 700; text-transform: capitalize; white-space: nowrap; padding-right: 3mm; }
+  a { color: var(--accent); text-decoration: none; font-weight: 700; }
+  .note { margin-top: 8mm; font-size: 7.5pt; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 2mm; }
+  .pagebreak { break-before: page; }
+</style>
+</head>
+<body>
+  <div class="brand">FitFusion</div>
+  <h1>{{ title }}</h1>
+  <div class="sub">{{ subtitle }}</div>
+
+  {% if targets %}
+  <div class="stats">
+    <div class="stat"><b>{{ targets.calories }}</b><span>kcal / day</span></div>
+    <div class="stat"><b>{{ targets.protein_g }} g</b><span>protein</span></div>
+    <div class="stat"><b>{{ targets.carbs_g }} g</b><span>carbs</span></div>
+    <div class="stat"><b>{{ targets.fat_g }} g</b><span>fat</span></div>
+  </div>
+  {% endif %}
+  <div class="profile">
+    <strong>Profile</strong> {{ profile_line }}
+    {% if diet_line %}<br><strong>Diet</strong> {{ diet_line }}{% endif %}
+    {% if allergies %}<br><strong>Avoiding</strong> {{ allergies }}{% endif %}
+    {% if equipment %}<br><strong>Equipment</strong> {{ equipment }}{% endif %}
+  </div>
+
+  <h2>Workouts <em>{{ workouts|length }} / week</em></h2>
+  {% for w in workouts %}
+  <div class="block">
+    <h3>Day {{ loop.index }} &middot; {{ w.name }}</h3>
+    <div class="meta">{{ w.category }} &middot; about {{ w.duration }} min{% if w.equipment %} &middot; {{ w.equipment }}{% endif %}</div>
+    <table>
+      <thead><tr><th>Exercise</th><th class="n">Sets</th><th class="n">Reps</th><th class="n">Rest</th><th class="n">Video</th></tr></thead>
+      <tbody>
+      {% for e in w.exercises %}
+        <tr>
+          <td>{{ e.name }}</td>
+          <td class="n">{{ e.sets }}</td>
+          <td class="n">{{ e.reps }}</td>
+          <td class="n">{{ e.rest }} s</td>
+          <td class="n">{% if e.video %}<a href="{{ e.video }}">Watch</a>{% else %}&ndash;{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endfor %}
+
+  <h2 class="pagebreak">Nutrition <em>5 days</em></h2>
+  {% for d in days %}
+  <div class="block">
+    <h3>Day {{ d.number }}</h3>
+    <table>
+      <thead><tr><th>Meal</th><th>What to eat</th><th class="n">kcal</th><th class="n">P</th><th class="n">C</th><th class="n">F</th></tr></thead>
+      <tbody>
+      {% for m in d.meals %}
+        <tr>
+          <td class="slot">{{ m.slot }}</td>
+          <td>{{ m.text }}</td>
+          <td class="n">{{ m.calories }}</td>
+          <td class="n">{{ m.protein_g }}</td>
+          <td class="n">{{ m.carbs_g }}</td>
+          <td class="n">{{ m.fat_g }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+      <tfoot><tr><td></td><td>Day total</td><td class="n">{{ d.total.calories }}</td><td class="n">{{ d.total.protein_g }}</td><td class="n">{{ d.total.carbs_g }}</td><td class="n">{{ d.total.fat_g }}</td></tr></tfoot>
+    </table>
+  </div>
+  {% endfor %}
+
+  <div class="note">Protein (P), carbs (C) and fat (F) are in grams. Generated by FitFusion on {{ created }}. This plan is general guidance, not medical advice; check with a professional if you have a health condition.</div>
+</body>
+</html>

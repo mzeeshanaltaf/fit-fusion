@@ -7,6 +7,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator
 
+from app.services.equipment import canonical as canonical_equipment
+
 Gender = Literal["male", "female", "other"]
 FitnessGoal = Literal["fat_loss", "muscle_gain", "maintenance", "strength", "endurance"]
 TrainingLevel = Literal["beginner", "intermediate", "advanced"]
@@ -15,10 +17,38 @@ DietPreference = Literal["no_restriction", "vegetarian", "vegan", "pescatarian",
 MIN_AGE = 15
 MAX_ALLERGIES = 10
 MAX_ALLERGY_LENGTH = 40
+# Swaps and nutrition regenerations share this budget per plan (they are free).
+MAX_PLAN_EDITS = 5
 
 # Letters (any script), digits, spaces and a few separators. Allergies are free text that
 # ends up inside a model prompt, so anything else (newlines, braces, quotes) is refused.
 _ALLERGY_PATTERN = re.compile(r"^[\w][\w \-'/&().]*$", re.UNICODE)
+
+
+def clean_allergies(values: list[str]) -> list[str]:
+    """Trim, lower-case, de-duplicate; refuse anything that is not plain text."""
+    cleaned: list[str] = []
+    for value in values:
+        item = " ".join(value.split()).lower()
+        if not item:
+            continue
+        if len(item) > MAX_ALLERGY_LENGTH or not _ALLERGY_PATTERN.match(item):
+            raise ValueError(
+                f"Invalid allergy entry; use plain text up to {MAX_ALLERGY_LENGTH} characters"
+            )
+        if item not in cleaned:
+            cleaned.append(item)
+    return cleaned
+
+
+def clean_equipment(values: list[str]) -> list[str]:
+    """Trim, canonicalise spelling variants (``dumbbell`` -> ``dumbbells``), de-duplicate."""
+    cleaned: list[str] = []
+    for value in values:
+        item = canonical_equipment(value) if value.strip() else ""
+        if item and item not in cleaned:
+            cleaned.append(item)
+    return cleaned
 
 
 class GeneratePlanRequest(BaseModel):
@@ -49,28 +79,12 @@ class GeneratePlanRequest(BaseModel):
     @field_validator("allergies")
     @classmethod
     def _clean_allergies(cls, values: list[str]) -> list[str]:
-        cleaned: list[str] = []
-        for value in values:
-            item = " ".join(value.split()).lower()
-            if not item:
-                continue
-            if len(item) > MAX_ALLERGY_LENGTH or not _ALLERGY_PATTERN.match(item):
-                raise ValueError(
-                    f"Invalid allergy entry; use plain text up to {MAX_ALLERGY_LENGTH} characters"
-                )
-            if item not in cleaned:
-                cleaned.append(item)
-        return cleaned
+        return clean_allergies(values)
 
     @field_validator("equipment")
     @classmethod
     def _clean_equipment(cls, values: list[str]) -> list[str]:
-        cleaned: list[str] = []
-        for value in values:
-            item = value.strip().lower()
-            if item and item not in cleaned:
-                cleaned.append(item)
-        return cleaned
+        return clean_equipment(values)
 
 
 def _to_str(value: object) -> object:
@@ -149,6 +163,8 @@ class PlanSummary(BaseModel):
     target_carbs_g: int | None
     target_fat_g: int | None
     edit_count: int
+    # Swaps + nutrition regenerations allowed per plan; remaining = edit_limit - edit_count.
+    edit_limit: int = MAX_PLAN_EDITS
     workout_names: list[str]
 
 

@@ -8,6 +8,8 @@ os.environ["JWT_AUDIENCE"] = "http://audience.test"
 os.environ["CORS_ORIGINS"] = "http://localhost:3000"
 # Never let a test reach the real model, whatever a developer's backend/.env contains.
 os.environ["OPENAI_API_KEY"] = ""
+# Admin routes are off unless a test turns them on; never use a key from backend/.env.
+os.environ["ADMIN_API_KEY"] = ""
 os.environ["SIGNUP_CREDITS"] = "10"
 
 import time

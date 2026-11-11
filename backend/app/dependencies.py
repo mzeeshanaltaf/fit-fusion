@@ -1,8 +1,9 @@
 """Shared FastAPI dependencies for the business routes."""
 
+import hmac
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import CurrentUser, CurrentUserDep
@@ -29,3 +30,26 @@ async def get_active_user(
 
 
 ActiveUserDep = Annotated[CurrentUser, Depends(get_active_user)]
+
+
+async def require_admin_key(
+    settings: SettingsDep,
+    x_api_key: Annotated[str | None, Header(description="The ADMIN_API_KEY value.")] = None,
+) -> None:
+    """Guard for ``/v1/admin/*``. No JWT: this is for operators and scripts.
+
+    An empty ``ADMIN_API_KEY`` disables the routes entirely (404, as if they did not exist).
+    The comparison is constant-time so response timing leaks nothing about the key.
+    """
+    if not settings.admin_api_key:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Not Found")
+    supplied = (x_api_key or "").encode()
+    if not hmac.compare_digest(supplied, settings.admin_api_key.encode()):
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API key",
+            headers={"WWW-Authenticate": "ApiKey"},
+        )
+
+
+AdminKeyDep = Depends(require_admin_key)

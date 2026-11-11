@@ -10,12 +10,29 @@ from sqlalchemy import text
 
 from app.config import get_settings
 from app.db import dispose_engine, get_engine
-from app.routers import credits, jobs, me, plans, whoami
+from app.routers import analytics, credits, jobs, library, me, plans, profile, progress, whoami
 from app.services.jobs import fail_interrupted_jobs
 
 logger = logging.getLogger(__name__)
 
 HEALTH_DB_TIMEOUT_SECONDS = 3.0
+
+OPENAPI_TAGS = [
+    {"name": "health", "description": "Liveness and database check (public)."},
+    {"name": "me", "description": "Dashboard overview."},
+    {
+        "name": "plans",
+        "description": "Generate, read, edit (swap / regenerate, 5 free edits per plan), "
+        "delete and export plans.",
+    },
+    {"name": "jobs", "description": "Plan generation status polling."},
+    {"name": "credits", "description": "Balance and history."},
+    {"name": "profile", "description": "Saved defaults for the generate form."},
+    {"name": "progress", "description": "Workout logging, this week's sessions and streaks."},
+    {"name": "library", "description": "Read-only data from the workout library."},
+    {"name": "analytics", "description": "Usage counts."},
+    {"name": "admin", "description": "Operator routes, guarded by the X-API-Key header."},
+]
 
 
 @asynccontextmanager
@@ -49,7 +66,12 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 def create_app() -> FastAPI:
     settings = get_settings()
-    app = FastAPI(title="FitFusion API", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(
+        title="FitFusion API",
+        version="0.2.0",
+        lifespan=lifespan,
+        openapi_tags=OPENAPI_TAGS,
+    )
 
     # Bearer-token API (no cookies), so credentials stay off.
     app.add_middleware(
@@ -64,6 +86,16 @@ def create_app() -> FastAPI:
 
     app.add_api_route("/health", health, methods=["GET"], tags=["health"])
     app.include_router(whoami.router, prefix="/v1")
-    for router in (me.router, plans.router, jobs.router, credits.router):
+    routers = (
+        me.router,
+        plans.router,
+        jobs.router,
+        credits.router,
+        profile.router,
+        progress.router,
+        analytics.router,
+        library.router,
+    )
+    for router in routers:
         app.include_router(router, prefix="/v1")
     return app

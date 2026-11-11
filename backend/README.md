@@ -1,9 +1,10 @@
 # FitFusion API
 
-FastAPI backend (Python 3.12, uv). Phase 2 state: JWT auth, credits, asynchronous plan
-generation (OpenAI), plans/jobs/credits endpoints. Profile, swap/regenerate, PDF, logs and
-analytics arrive in Phase 3. Plan: `../docs/plan/`. Endpoint reference: `/docs` (Swagger) or
-`/openapi.json` on a running server, and `../docs/plan/HANDOFF.md`.
+FastAPI backend (Python 3.12, uv). Phase 3 state: feature-complete API: JWT auth, credits,
+asynchronous plan generation (OpenAI), plans/jobs/credits, profile, swap/regenerate (5 free
+edits per plan), PDF export, workout logs and progress, analytics. Plan: `../docs/plan/`.
+Endpoint reference: `/docs` (Swagger) or `/openapi.json` on a running server, and the
+endpoint table in `../docs/plan/HANDOFF.md`.
 
 ## Run
 
@@ -19,6 +20,11 @@ uv run uvicorn app.main:create_app --factory --reload --port 8000
   (+ `/history`) need a verified user. The first request from a verified user grants
   `SIGNUP_CREDITS`; generating a plan costs 1 credit and is refunded if it fails.
 - On startup, jobs a previous process left `queued`/`running` are failed and refunded.
+- `GET /v1/admin/analytics` takes the `X-API-Key` header (= `ADMIN_API_KEY`), no JWT; it
+  answers 404 while `ADMIN_API_KEY` is empty.
+- `GET /v1/plans/{id}/pdf` needs WeasyPrint's native libraries (Pango). The Docker image
+  installs them; on Windows/macOS see WeasyPrint's install docs, or run the API in Docker.
+  PDF tests need it too.
 - `GET /v1/whoami` needs `Authorization: Bearer <token>`. It is a diagnostic that proves a
   Better Auth token is accepted. Get a token from the Next.js app: `GET /api/auth/token`
   with a signed-in session cookie.
@@ -49,6 +55,20 @@ uv run alembic upgrade head
 TEST_DATABASE_URL=$DATABASE_URL uv run pytest
 ```
 
+Real-library run (Phase 3): the live `workout_details` is copied, data only, into a SECOND
+database of the same container (the DB tests truncate `workout_details` in
+`fitfusion_test`). `legacy_schema.sql` already has the live table's `deleted_at` column.
+
+```bash
+docker exec fitfusion-test-postgres psql -U postgres -c "CREATE DATABASE fitfusion_full TEMPLATE fitfusion_test"
+# read-only, data-only dump of that one table (DATABASE_URL = live DB, loaded from .env.local)
+docker run --rm -e DATABASE_URL postgres:17 sh -c \
+  'pg_dump --data-only --no-owner --no-privileges -t fit_fusion.workout_details "$DATABASE_URL"' \
+  > workout_details_data.sql
+docker exec -i fitfusion-test-postgres psql -U postgres -d fitfusion_full -v ON_ERROR_STOP=1 \
+  < workout_details_data.sql
+```
+
 Alternative: throwaway Postgres with a copy of the live schema:
 
 ```bash
@@ -66,7 +86,8 @@ TEST_DATABASE_URL=$DATABASE_URL uv run pytest
 ## Migrations (Alembic, `fit_fusion` schema only)
 
 ```bash
-uv run alembic upgrade head      # 0001 fitness_plans, 0002 new tables, 0003 ledger types
+uv run alembic upgrade head      # 0001 fitness_plans, 0002 new tables, 0003 ledger types,
+                                 # 0004 free (zero-credit) edit rows in the ledger
 uv run alembic downgrade base    # exact inverse (verified by schema diff)
 uv run alembic current
 ```

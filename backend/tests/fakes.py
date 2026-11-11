@@ -47,6 +47,7 @@ class FakeLLM:
         self.calls: list[tuple[str, str]] = []
         self.workout_script: list[WorkoutSelection | Exception] = []
         self.nutrition_script: list[NutritionPlan | Exception] = []
+        self.day_script: list[DayNutrition | Exception] = []
 
     async def parse(self, *, instructions: str, prompt: str, output_model: type) -> Any:
         self.calls.append((output_model.__name__, prompt))
@@ -57,6 +58,12 @@ class FakeLLM:
             else:
                 ids = [c["id"] for c in payload["candidates"]][: payload["workouts_to_choose"]]
                 item = WorkoutSelection(workout_ids=ids)
+        elif output_model is DayNutrition:
+            item = (
+                self.day_script.pop(0)
+                if self.day_script
+                else nutrition_for(payload["daily_targets"], meal_text="Fresh rewritten meal").day_1
+            )
         elif output_model is NutritionPlan:
             item = (
                 self.nutrition_script.pop(0)

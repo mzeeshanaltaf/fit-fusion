@@ -2,7 +2,8 @@
 -- (n8n_workflows/FitFusion AI.json) so a DISPOSABLE local Postgres can be migrated with
 -- `alembic upgrade head` without reading the live database.
 --
--- Assumptions (the live DDL for these two was not available offline):
+-- Assumptions (the live DDL for these two was not available offline; workout_details was
+-- later checked against the live data and gained deleted_at):
 --   * workout_details columns: workout_id uuid PK, workout_name, workout_category (enum),
 --     workout_detail jsonb, fitness_goal (enum), training_level (enum), timestamps.
 --   * Better Auth's "user" table is reduced to the columns the tests need.
@@ -94,5 +95,6 @@ CREATE TABLE fit_fusion.workout_details (
     fitness_goal fit_fusion.fitness_goal_enum NOT NULL,
     training_level fit_fusion.training_level_enum NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now(),
-    updated_at timestamptz NOT NULL DEFAULT now()
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    deleted_at timestamptz  -- soft delete; exists on the live table (found in Phase 3)
 );
