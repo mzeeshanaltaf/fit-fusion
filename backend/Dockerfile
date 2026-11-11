@@ -4,12 +4,15 @@ FROM python:3.12-slim-bookworm
 COPY --from=ghcr.io/astral-sh/uv:0.8.3 /uv /uvx /bin/
 
 # WeasyPrint (PDF export, Phase 3) needs Pango + a font; everything else is pure wheels.
+# curl: Coolify's container health check shells out to curl or wget (neither is in slim).
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core \
+        libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core curl \
     && rm -rf /var/lib/apt/lists/*
 
-ENV UV_COMPILE_BYTECODE=1 \
+# appuser has no home; give fontconfig a writable cache so it stops warning on every PDF.
+ENV XDG_CACHE_HOME=/tmp/.cache \
+    UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
