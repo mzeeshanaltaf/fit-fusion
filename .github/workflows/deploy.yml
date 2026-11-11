@@ -1,19 +1,22 @@
 name: Deploy to Coolify
 
-# Auto-deploys this app to Coolify on every push to main. Use this INSTEAD of
-# Coolify's built-in git-push webhook: that webhook is fire-once — a transient
-# 502 (Coolify briefly unreachable while a build is running) silently drops the
-# deploy with no retry. This workflow calls Coolify's deploy API with retries +
-# backoff and turns a red run (with email) when it can't reach Coolify at all.
+# Auto-deploys both apps to Coolify on every push to main, API first, then the web app.
+# Use this INSTEAD of Coolify's built-in git-push webhook: that webhook is fire-once, so a
+# transient 502 (Coolify briefly unreachable while a build is running) silently drops the
+# deploy with no retry. This workflow calls Coolify's deploy API with retries + backoff and
+# turns a red run (with email) when it can't reach Coolify at all.
 #
-# Setup (already done during the Phase 5 migration):
-#   - Coolify app "fitfusion" created; its Auto Deploy is inert (no GitHub webhook).
-#   - Repo secrets set (Settings -> Secrets and variables -> Actions):
-#       COOLIFY_API_TOKEN  - Coolify API token (rotate to a deploy-scoped one anytime)
-#       COOLIFY_APP_UUID   - the APPLICATION uuid (rv7fj0mrik7ht0cy582bqxq8)
+# Order matters: the web app's JWTs are verified by the API, and the API must be healthy
+# before the new frontend, which calls it, goes live.
+#
+# Repo secrets (Settings -> Secrets and variables -> Actions):
+#   COOLIFY_API_TOKEN        - Coolify API token (rotate to a deploy-scoped one anytime)
+#   COOLIFY_APP_UUID         - the web app (fitfusion) application uuid (rv7fj0mrik7ht0cy582bqxq8)
+#   COOLIFY_API_APP_UUID     - the API (fitfusion-api) application uuid (8oikgn4vwlgecjecsndqqtl5)
 
 env:
   COOLIFY_URL: https://coolify.zeeshanai.cloud
+  API_HEALTH_URL: https://api.fitfusion.zeeshanai.cloud/health
 
 on:
   push:
@@ -25,20 +28,73 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  deploy-api:
     runs-on: ubuntu-latest
     steps:
-      # POST is required — Coolify's /deploy route rejects GET with a 405 stub.
-      # 90s per attempt: the VPS can be CPU-saturated under load from other apps,
-      # so the deploy call needs headroom, not just retries.
-      - name: Trigger Coolify deploy (with retries)
+      - name: Trigger API deploy (with retries) and wait until it is healthy
+        env:
+          COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+          APP_UUID: ${{ secrets.COOLIFY_API_APP_UUID }}
+        run: |
+          set -u
+          deployment=""
+          for i in 1 2 3 4 5; do
+            # Coolify only accepts POST on /deploy (GET answers 405).
+            code=$(curl -sS -X POST -o resp.json -w "%{http_code}" --max-time 90 \
+              "${COOLIFY_URL}/api/v1/deploy?uuid=${APP_UUID}&force=false" \
+              -H "Authorization: Bearer ${COOLIFY_API_TOKEN}" || echo "000")
+            echo "Attempt $i -> HTTP $code"
+            if [ "$code" = "200" ]; then
+              deployment=$(jq -r '.deployments[0].deployment_uuid // empty' resp.json)
+              break
+            fi
+            if [ "$i" -lt 5 ]; then
+              backoff=$((i * 15)) # 15s, 30s, 45s, 60s
+              echo "Retrying in ${backoff}s..."
+              sleep "$backoff"
+            fi
+          done
+          if [ -z "$deployment" ]; then
+            echo "::error::Could not trigger the API deploy."
+            exit 1
+          fi
+          echo "API deployment: $deployment"
+          for i in $(seq 1 60); do # up to 20 minutes
+            status=$(curl -sS --max-time 30 \
+              "${COOLIFY_URL}/api/v1/deployments/${deployment}" \
+              -H "Authorization: Bearer ${COOLIFY_API_TOKEN}" | jq -r '.status // "unknown"')
+            echo "poll $i: $status"
+            case "$status" in
+              finished) break ;;
+              failed | cancelled*) echo "::error::API deploy ended as $status"; exit 1 ;;
+            esac
+            sleep 20
+          done
+          if [ "$status" != "finished" ]; then
+            echo "::error::API deploy did not finish in time (last status: $status)."
+            exit 1
+          fi
+          for i in $(seq 1 12); do # up to 2 minutes for the new container to answer
+            code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 15 "${API_HEALTH_URL}" || echo "000")
+            echo "health $i -> HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "::error::API deployed but ${API_HEALTH_URL} is not healthy."
+          exit 1
+
+  deploy-web:
+    needs: deploy-api
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger web deploy (with retries)
         env:
           COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
           COOLIFY_APP_UUID: ${{ secrets.COOLIFY_APP_UUID }}
         run: |
           set -u
           for i in 1 2 3 4 5; do
-            code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 90 -X POST \
+            code=$(curl -sS -X POST -o /dev/null -w "%{http_code}" --max-time 90 \
               "${COOLIFY_URL}/api/v1/deploy?uuid=${COOLIFY_APP_UUID}&force=false" \
               -H "Authorization: Bearer ${COOLIFY_API_TOKEN}" || echo "000")
             echo "Attempt $i -> HTTP $code"
@@ -47,7 +103,7 @@ jobs:
               exit 0
             fi
             if [ "$i" -lt 5 ]; then
-              backoff=$((i * 20)) # 20s, 40s, 60s, 80s
+              backoff=$((i * 15)) # 15s, 30s, 45s, 60s
               echo "Retrying in ${backoff}s..."
               sleep "$backoff"
             fi
