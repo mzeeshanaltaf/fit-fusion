@@ -44,10 +44,11 @@ class Settings(BaseSettings):
     # ── AI (OpenAI Responses API) ───────────────────────────────────────────
     openai_api_key: str = ""
     openai_model: str = "gpt-6-luna"
-    openai_service_tier: str = "flex"
+    openai_service_tier: str = "default"
     openai_reasoning_effort: str = "low"
     openai_timeout_seconds: int = 900
-    # Tier to retry on when flex has no capacity (e.g. "auto"). Empty = no retry.
+    # Only used when OPENAI_SERVICE_TIER=flex: tier to retry on when flex has no capacity
+    # (e.g. "default"). Empty = no retry.
     openai_flex_fallback_tier: str = ""
     # Swap / regenerate run inside the HTTP request (no job), so they get a shorter deadline
     # than a generation job. On timeout nothing is changed and no edit is used.

@@ -1,8 +1,9 @@
 """OpenAI Responses API with structured outputs.
 
-Model, service tier, reasoning effort and timeout all come from settings. On the ``flex``
-tier, a capacity error (HTTP 429 "resource unavailable", or 503) is retried once on
-``OPENAI_FLEX_FALLBACK_TIER`` when that is set; otherwise it surfaces as ``LLMError``.
+Model, service tier (default: ``default``), reasoning effort and timeout all come from
+settings. If the tier is set to ``flex``, a capacity error (HTTP 429 "resource unavailable",
+or 503) is retried once on ``OPENAI_FLEX_FALLBACK_TIER`` when that is set; otherwise it
+surfaces as ``LLMError``.
 
 Generation code depends on the ``StructuredLLM`` protocol, so tests swap in a fake.
 """

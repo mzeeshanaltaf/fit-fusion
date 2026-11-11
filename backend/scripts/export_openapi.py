@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 # Settings need a DATABASE_URL to load; the schema export never connects to it.
 os.environ.setdefault("DATABASE_URL", "postgresql://user:pass@localhost:5432/unused")
 
-from app.main import create_app  # noqa: E402
+from app.main import create_app
 
 
 def main() -> None:
