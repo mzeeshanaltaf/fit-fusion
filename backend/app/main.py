@@ -10,7 +10,8 @@ from sqlalchemy import text
 
 from app.config import get_settings
 from app.db import dispose_engine, get_engine
-from app.routers import whoami
+from app.routers import credits, jobs, me, plans, whoami
+from app.services.jobs import fail_interrupted_jobs
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,12 @@ HEALTH_DB_TIMEOUT_SECONDS = 3.0
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    try:
+        await fail_interrupted_jobs()
+    except Exception:
+        # Do not refuse to boot over this: /health reports a dead database, and the
+        # sweep runs again on the next start.
+        logger.exception("Startup sweep of interrupted generation jobs failed")
     yield
     await dispose_engine()
 
@@ -57,4 +64,6 @@ def create_app() -> FastAPI:
 
     app.add_api_route("/health", health, methods=["GET"], tags=["health"])
     app.include_router(whoami.router, prefix="/v1")
+    for router in (me.router, plans.router, jobs.router, credits.router):
+        app.include_router(router, prefix="/v1")
     return app
